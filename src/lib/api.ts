@@ -286,6 +286,19 @@ export function validarSessao(): Promise<SessaoInfo> {
   return request<SessaoInfo>("/auth/me");
 }
 
+// Encerra a sessao no servidor antes de limpar o token local. Sem isto o token
+// continuaria aceito pela API ate expirar, mesmo depois de o usuario sair.
+// Falha de rede nao pode impedir o logout local — por isso o catch vazio.
+export async function logout(): Promise<void> {
+  try {
+    await request("/auth/logout", { method: "POST" });
+  } catch {
+    /* offline ou token ja invalido: o logout local acontece de qualquer forma */
+  } finally {
+    session.clear();
+  }
+}
+
 // Teto imposto pelo servidor (Math.Clamp no PortalClienteService); a query em si
 // varre a base inteira de clientes da empresa no Postgres — so a exibicao e capada.
 export const LIMITE_MAXIMO = 100;

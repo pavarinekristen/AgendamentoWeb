@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { SignOut, List, MagnifyingGlass, Fingerprint } from "@phosphor-icons/react";
 import {
   session,
+  logout,
   validarSessao,
   listarVencimentos,
   listarAgenda,
@@ -100,7 +101,9 @@ export default function App() {
   }, []);
 
   const sair = useCallback(() => {
-    session.clear();
+    // Revoga a sessao no servidor; a limpeza local acontece dentro do logout()
+    // mesmo se a chamada falhar, entao a UI pode seguir na hora.
+    void logout();
     setLogado(false);
     setUsuario(null);
     setAba("inicio");
