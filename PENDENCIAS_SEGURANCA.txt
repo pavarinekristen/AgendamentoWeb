@@ -1,0 +1,125 @@
+========================================================================
+ PENDENCIAS DE SEGURANCA - SparkCore Mobile + API
+ Gerado a partir do laudo de pentest de 17/07/2026
+========================================================================
+
+Referencia de infraestrutura:
+- App (PWA):  https://laudos.clinicaideia.com.br  (Hostinger, pasta public_html/laudos)
+- API:        https://api.clinicaideia.com.br     (nginx 443 -> Kestrel 9090 na VM Linode 45.56.77.43)
+- Codigo API: C:\Users\krist\RetaguardaAgendamentoAPI
+- Codigo App: C:\AgendamentoWeb
+- Desktop:    C:\Users\krist\AgendamentoWpfApp
+
+
+========================================================================
+ JA CORRIGIDO (17/07/2026)
+========================================================================
+
+[x] H2 - Rate limit nas rotas do portal e de sync
+      - portal/clientes e portal/agenda: 60 req/min por IP (PortalPolicy)
+      - sincroniza/agenda: 300 req/min por IP (SyncPolicy, folgado p/ resync)
+      - Validado: 60 passam, excedente recebe HTTP 429.
+      - Backup da API na VM: /var/www/sparkcore-api.bak-20260717143214
+
+[x] M2 (API) - Headers de seguranca no nginx da API
+      - Strict-Transport-Security (HSTS), X-Frame-Options DENY,
+        X-Content-Type-Options nosniff, Referrer-Policy.
+      - Backup nginx: /etc/nginx/sites-available/api.clinicaideia.com.br.bak-pre-headers
+
+
+========================================================================
+ PENDENTE - ORDEM DE PRIORIDADE
+========================================================================
+
+------------------------------------------------------------------------
+[ ] H1 (ALTA) - Porta 9090 em HTTP puro exposta na internet
+------------------------------------------------------------------------
+Problema: http://45.56.77.43:9090 responde sem TLS. O DESKTOP fala com a
+API por esse endereco (texto plano), entao login (email+senha) e o sync
+dos 48k clientes (nome/CPF/RG/telefone/email) trafegam sem criptografia -
+qualquer um no caminho da rede consegue capturar (MITM/sniffing).
+
+Como corrigir (a ORDEM importa, senao o desktop para de funcionar):
+  [x] 1. AppSettings.cs alterado para https://api.clinicaideia.com.br
+         (17/07/2026, compilado OK).
+  [ ] 2. Recompilar e distribuir o desktop atualizado (updater) a TODAS as
+         maquinas que usam o sistema.
+  [ ] 3. So depois, na VM, fechar a 9090 para o mundo externo:
+           ufw delete allow 9090/tcp && ufw reload
+         (o nginx continua usando 127.0.0.1:9090 internamente, sem problema)
+
+------------------------------------------------------------------------
+[~] H3 (ALTA) - Login sem bloqueio de conta e sem 2FA  (PARCIAL 17/07/2026)
+------------------------------------------------------------------------
+FEITO no codigo (falta DEPLOY na VM):
+  [x] Lockout por conta: 5 senhas erradas -> bloqueio de 15 min
+      (AuthService.LoginAsync; colunas TENTATIVAS_FALHAS/BLOQUEADO_ATE
+       via postgres-migrations/004_login_lockout.sql). Sucesso zera contador.
+  [x] Senha minima subiu de 8 para 12 (criacao de conta e redefinicao).
+  [x] Testes de integracao: 64/64 passando (inclui 3 novos de lockout).
+  Deploy: aplicar 004_login_lockout.sql no Postgres da VM (script
+  deploy/apply-postgres-migrations.sh, idempotente) ANTES de subir a API nova.
+
+  [x] 2FA por email implementado (17/07/2026): contas listadas em
+      Auth:Emails2FA (appsettings) exigem codigo de 6 digitos por e-mail
+      (POST /auth/login -> requer2FA=true -> POST /auth/login/2fa).
+      Codigo de uso unico, expira em 10 min; tentativas erradas contam
+      no lockout. App mobile ja tem a tela do codigo. 68/68 testes.
+
+DEPLOY FEITO EM PRODUCAO (18/07/2026 00:35 UTC):
+  [x] Migration 004 aplicada no Postgres da VM (backup do banco em
+      /opt/sparkcore/backups/retaguarda-pre-004-20260718002810.sql.gz;
+      backup da API em /var/www/sparkcore-api.bak-<timestamp>).
+  [x] API nova no ar (self-contained linux-x64): lockout + senha 12 +
+      2FA + /portal/relatorios. /health OK, banco OK.
+  [x] 2FA LIGADO via /etc/sparkcore/sparkcore-api.env:
+      Auth__Emails2FA__0=retaguardaagendamento@gmail.com
+      (SMTP ja estava ativo na VM com essa mesma conta Gmail).
+  [ ] VALIDAR: login da diretoria no app deve pedir codigo por e-mail.
+      Se o e-mail nao chegar, remover a linha Auth__Emails2FA__0 do env
+      e `systemctl restart sparkcore-api` (destrava na hora).
+
+------------------------------------------------------------------------
+[x] M2-FRONT - CSP e headers no site (Hostinger) - CONCLUIDO 17/07/2026
+------------------------------------------------------------------------
+.htaccess publicado em public_html/laudos (veio no zip do dist).
+Validado ao vivo em https://laudos.clinicaideia.com.br: HSTS, X-Frame-Options
+DENY, X-Content-Type-Options nosniff, Referrer-Policy e CSP com connect-src
+limitado a https://api.clinicaideia.com.br — todos presentes na resposta.
+
+------------------------------------------------------------------------
+[ ] M1 (MEDIA) - Token de sessao no localStorage (exfiltravel por XSS)
+------------------------------------------------------------------------
+Mitigado em boa parte pelo CSP acima (M2-front). Correcao definitiva seria
+migrar para cookie HttpOnly (muda a arquitetura de auth do app e da API).
+Prioridade menor apos o CSP estar ativo.
+
+------------------------------------------------------------------------
+[ ] M3 (MEDIA) - "Acesso exclusivo da diretoria" e so no cliente
+------------------------------------------------------------------------
+Problema: VITE_ALLOWED_EMAILS roda no navegador (cosmetico). Qualquer conta
+valida e confirmada chama a API direto e ve os dados da propria empresa.
+Nao vaza dados de OUTRA empresa (isolamento por empresa esta correto), mas
+a "exclusividade" nao existe no servidor.
+
+Como corrigir (se exclusividade for requisito real): validar no servidor,
+ex. exigir PERFIL='Administrador' nos controllers do portal, ou allowlist
+de email no appsettings (NAO no bundle do front).
+
+
+========================================================================
+ O QUE JA ESTA BLINDADO (auditado e aprovado - nao precisa mexer)
+========================================================================
+- Sem secrets no bundle do app (so a URL publica da API).
+- IDOR/BOLA contido: empresaId vem sempre do token, nunca do payload.
+- SQL Injection: todas as queries parametrizadas; nomes de tabela/coluna
+  vem de whitelist.
+- Senhas: PBKDF2-SHA256, 210.000 iteracoes, salt aleatorio, tempo constante.
+- Tokens de sessao: 384 bits aleatorios, guardados hasheados (SHA-256) no
+  banco, expiram em 12h, revogados no reset de senha.
+- Anti-enumeracao no recuperar-senha.
+
+------------------------------------------------------------------------
+Nota: SSL Pinning NAO se aplica (o app e web/PWA em navegador; quem controla
+o TLS e o SO/navegador). A defesa equivalente e o HSTS, ja aplicado na API.
+========================================================================

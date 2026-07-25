@@ -1,0 +1,449 @@
+@import "tailwindcss";
+
+/* Design system SparkCore (portado de Styles/Colors.xaml do desktop):
+   papel quente, tinta, laranja como unico acento. */
+@theme {
+  --color-spark-ink: #1c1917;
+  --color-spark-text: #2a2620;
+  --color-spark-body: #6b6259;
+  --color-spark-muted: #9a938c;
+  --color-spark-faint: #b3aca4;
+  --color-spark-line: #eee7dd;
+  --color-spark-inputline: #e7e0d7;
+  --color-spark-panel: #ffffff;
+  --color-spark-page: #f6f2ec;
+  --color-spark-surface: #faf7f2;
+  --color-spark-field: #faf8f6;
+  --color-spark-accent: #e0670a;
+  --color-spark-accent-light: #f7931e;
+  --color-spark-accent-strong: #c25a08;
+  --color-spark-soft: #fdefe0;
+  --color-spark-hover: #fdf6ef;
+  --color-spark-selected: #fdeede;
+  --color-spark-danger: #b23f2f;
+  --color-spark-success: #1f8a4c;
+
+  /* Cores dedicadas de status para os graficos (validadas p/ daltonismo
+     via scripts/validate_palette.js da skill dataviz). */
+  --color-spark-chart-green: #1f8a4c;
+  --color-spark-chart-red: #b23f2f;
+  --color-spark-chart-amber: #d98324;
+  --color-spark-chart-neutral: #b3aca4;
+
+  /* Hierarquia tipografica premium:
+     Plus Jakarta Sans (display) para titulos — moderna e com autoridade.
+     Inter (body/dados) para textos e tabelas — legibilidade alta em telas.
+     tabular-nums nos numeros de dashboard para colunas alinhadas. */
+  --font-sans:
+    "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display:
+    "Plus Jakarta Sans Variable", "Plus Jakarta Sans", "Inter Variable", system-ui, sans-serif;
+}
+
+/* Titulos usam a fonte display por padrao. */
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Numeros de metrica: tabular para nao "dancar" ao atualizar. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  background-color: #f6f2ec;
+  color: #1c1917;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  /* Sensacao de app nativo: sem elastico de navegador, sem flash azul de
+     toque e sem atraso/zoom de duplo toque. */
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+#root {
+  height: 100%;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* Area de rolagem interna com barra visivel quando houver conteudo maior. */
+.app-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #cfc6bb transparent;
+}
+
+.app-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.app-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-scroll::-webkit-scrollbar-thumb {
+  background-color: #cfc6bb;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+
+.app-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #b9aea2;
+}
+
+/* Transicao suave ao trocar de aba. */
+@keyframes tab-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tab-anim {
+  animation: tab-in 0.22s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-anim {
+    animation: none;
+  }
+}
+
+/* Toast (feedback nao-intrusivo): sobe suave a partir da base. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.toast-in {
+  animation: toast-in 0.2s ease both;
+}
+
+/* Command palette (Cmd/Ctrl+K): leve entrada de cima. */
+@keyframes cmdk-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.cmdk-in {
+  animation: cmdk-in 0.16s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-in,
+  .cmdk-in {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Holograma da agenda (portado de Assets/login-hologram.html do desktop).
+   Versao CSS 3D: mesma cena (cone de luz, chao, scanlines, aneis) com a
+   agenda wireframe girando em perspective, sem depender de Three.js.
+--------------------------------------------------------------------------- */
+
+.holo-panel {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(130% 78% at 50% 33%, rgba(247, 147, 30, 0.16), transparent 56%),
+    linear-gradient(160deg, #191310 0%, #241a12 55%, #30220f 100%);
+}
+
+/* Chao do palco: grade em perspectiva que recua e some ao fundo. */
+.holo-panel::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -2%;
+  width: 200%;
+  height: 46%;
+  transform: translateX(-50%) perspective(320px) rotateX(64deg);
+  transform-origin: bottom center;
+  background:
+    repeating-linear-gradient(0deg, rgba(247, 147, 30, 0.11) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(90deg, rgba(247, 147, 30, 0.08) 0 1px, transparent 1px 34px);
+  -webkit-mask-image: linear-gradient(to top, #000 6%, transparent 80%);
+  mask-image: linear-gradient(to top, #000 6%, transparent 80%);
+  pointer-events: none;
+}
+
+/* Vinheta suave para focar o centro do palco. */
+.holo-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(125% 92% at 50% 40%, transparent 54%, rgba(0, 0, 0, 0.5) 100%);
+  pointer-events: none;
+}
+
+@keyframes sc-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes sc-scan {
+  from { background-position: 0 0; }
+  to { background-position: 0 8px; }
+}
+
+@keyframes sc-flicker {
+  0%, 100% { opacity: 0.6; }
+  48% { opacity: 0.5; }
+  50% { opacity: 0.75; }
+  52% { opacity: 0.55; }
+}
+
+@keyframes sc-spin {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+
+.holo {
+  position: relative;
+  width: 240px;
+  height: 250px;
+  animation: sc-float 5.5s ease-in-out infinite;
+}
+
+.holo-cone {
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  bottom: 24px;
+  width: 72%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(247, 147, 30, 0.16), rgba(247, 147, 30, 0.02));
+  clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.holo-floor {
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 190px;
+  height: 46px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(247, 147, 30, 0.4), transparent 68%);
+  filter: blur(5px);
+}
+
+.holo-stage {
+  position: absolute;
+  inset: 0 0 28px;
+  perspective: 640px;
+}
+
+.holo-spin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 148px;
+  height: 168px;
+  margin: -84px 0 0 -74px;
+  transform-style: preserve-3d;
+  animation: sc-spin 13s linear infinite;
+}
+
+.holo-cal {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(251, 165, 59, 0.8);
+  border-radius: 14px;
+  box-shadow:
+    0 0 26px rgba(247, 147, 30, 0.45),
+    inset 0 0 26px rgba(247, 147, 30, 0.18);
+  background:
+    /* marcadores de dias */
+    radial-gradient(circle 3px at 24% 46%, rgba(255, 202, 138, 0.9) 98%, transparent),
+    radial-gradient(circle 3px at 50% 46%, rgba(255, 202, 138, 0.9) 98%, transparent),
+    radial-gradient(circle 3px at 76% 46%, rgba(255, 202, 138, 0.9) 98%, transparent),
+    radial-gradient(circle 3px at 37% 64%, rgba(255, 202, 138, 0.9) 98%, transparent),
+    radial-gradient(circle 3px at 63% 64%, rgba(255, 202, 138, 0.9) 98%, transparent),
+    radial-gradient(circle 3px at 24% 82%, rgba(255, 202, 138, 0.9) 98%, transparent),
+    radial-gradient(circle 3px at 76% 82%, rgba(255, 202, 138, 0.9) 98%, transparent),
+    /* grade */
+    repeating-linear-gradient(0deg, transparent 0 36px, rgba(251, 165, 59, 0.4) 36px 37px),
+    repeating-linear-gradient(90deg, transparent 0 36px, rgba(251, 165, 59, 0.3) 36px 37px),
+    /* faixa do cabecalho */
+    linear-gradient(180deg, rgba(251, 165, 59, 0.5) 0 24px, rgba(247, 147, 30, 0.07) 24px);
+  backface-visibility: visible;
+}
+
+.holo-cal::after {
+  content: "";
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  top: -9px;
+  height: 18px;
+  border-left: 2px solid rgba(251, 165, 59, 0.8);
+  border-right: 2px solid rgba(251, 165, 59, 0.8);
+}
+
+.holo-cal-depth {
+  transform: translateZ(-10px);
+  opacity: 0.35;
+  box-shadow: none;
+}
+
+.holo-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 205, 150, 0.12) 0px,
+    rgba(255, 205, 150, 0.12) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  mix-blend-mode: screen;
+  animation: sc-scan 1.4s linear infinite, sc-flicker 4s ease-in-out infinite;
+}
+
+.holo-ring-main {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 156px;
+  height: 24px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  border: 1px solid rgba(247, 147, 30, 0.55);
+  box-shadow: 0 0 22px rgba(247, 147, 30, 0.4), inset 0 0 14px rgba(247, 147, 30, 0.3);
+}
+
+.holo-ring-inner {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 100px;
+  height: 14px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  border: 1px solid rgba(247, 147, 30, 0.3);
+}
+
+/* Aura pulsante atras da agenda: a "luz do projetor" do palco. */
+.holo-aura {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 440px;
+  height: 440px;
+  max-width: 92vw;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    rgba(247, 147, 30, 0.22),
+    rgba(247, 147, 30, 0.05) 44%,
+    transparent 70%
+  );
+  filter: blur(4px);
+  animation: sc-aura 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sc-aura {
+  0%, 100% { opacity: 0.65; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
+}
+
+/* Brasas quentes subindo devagar: vida ambiente, bem sutil. */
+.holo-embers {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ember {
+  position: absolute;
+  bottom: -8px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 194, 130, 0.85);
+  box-shadow: 0 0 7px rgba(247, 147, 30, 0.85);
+  animation: sc-ember linear infinite;
+  opacity: 0;
+}
+
+@keyframes sc-ember {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  12% { opacity: 0.9; }
+  80% { opacity: 0.5; }
+  100% { transform: translateY(-56vh) translateX(10px) scale(0.35); opacity: 0; }
+}
+
+/* Entrada suave do cartao de login e do conteudo do palco. */
+@keyframes sc-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+.login-card {
+  animation: sc-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.login-panel-content {
+  animation: sc-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .holo,
+  .holo-spin,
+  .holo-scanlines,
+  .holo-aura,
+  .login-card,
+  .login-panel-content {
+    animation: none;
+  }
+
+  .ember {
+    display: none;
+  }
+
+  .holo-spin {
+    transform: rotateY(-14deg);
+  }
+}

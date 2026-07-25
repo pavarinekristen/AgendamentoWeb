@@ -1,0 +1,25 @@
+# Dependencias
+node_modules
+
+# Builds e artefatos
+dist
+dist-preview
+*.zip
+*.lnk
+*.tsbuildinfo
+
+# Ambiente (segredos e overrides locais)
+.env
+.env.*.local
+*.local
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Logs
+*.log
+npm-debug.log*

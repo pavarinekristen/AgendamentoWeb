@@ -1,0 +1,74 @@
+========================================================================
+ PROXIMAS TASKS - SparkCore Mobile + API
+ Atualizado em 18/07/2026 (apos GC2/GC5/GC6 concluidos no codigo)
+========================================================================
+
+------------------------------------------------------------------------
+ ACOES DO USUARIO (pendentes para fechar o que ja foi feito)
+------------------------------------------------------------------------
+[ ] Subir o zip novo na Hostinger (sparkcore-laudos-2026-07-17.zip, raiz
+    deste repo) em public_html/laudos. Traz: aba Resumo, tela 2FA,
+    formularios de agendamento e cadastro de cliente.
+    Depois: fechar e reabrir o PWA 2x para o service worker atualizar.
+[ ] Distribuir o desktop recompilado (C:\Users\krist\AgendamentoWpfApp)
+    a TODAS as maquinas. Esse build inclui:
+      - H1: URL https://api.clinicaideia.com.br (sem HTTP puro)
+      - Pull de pendencias do portal (consultas/clientes criados no app
+        chegam ao SQLite local em ate 30s)
+[ ] So depois de TODAS as maquinas atualizadas: fechar a porta 9090 na VM
+      ufw delete allow 9090/tcp && ufw reload
+[ ] Testar o login 2FA da diretoria (kristenpp2003@gmail.com): sair do
+    app e logar de novo — deve pedir codigo de 6 digitos por e-mail.
+[ ] Testar fluxo completo: criar consulta no celular -> conferir se
+    aparece no desktop da clinica em ate 30s.
+[ ] SEGURANCA DA VM: trocar a senha root (fraca e foi exposta em chat)
+    e migrar para chave SSH.
+
+------------------------------------------------------------------------
+ GAME CHANGERS PENDENTES (ordem sugerida)
+------------------------------------------------------------------------
+[ ] GC4 - Push notifications (Web Push) de vencimentos e agenda
+    API: endpoint para registrar PushSubscription + job diario que
+    notifica "N laudos vencem esta semana" e "consultas de amanha"
+    (VAPID, lib WebPush para .NET). App: pedir permissao pos-login,
+    registrar subscription no service worker (QW1 ja esta pronto),
+    clique da notificacao abre a aba certa.
+
+[ ] GC1 - Automacao de convocacao de periodicos via WhatsApp API
+    Job agendado na API que varre vencimentos e dispara convocacao de
+    renovacao via WhatsApp (Cloud API oficial da Meta ou gateway tipo
+    Z-API). Requisitos: template aprovado, opt-out, log de envios por
+    cliente (nao reenviar antes de N dias), painel de acompanhamento.
+    DECIDIR PROVEDOR COM O USUARIO ANTES DE CODAR (custo/burocracia da
+    API oficial vs gateway).
+
+[ ] GC3 - Portal self-service de agendamento para o RH das empresas
+    Link publico por empresa contratante (token/slug) onde o RH agenda
+    ASO admissional/periodico nos slots livres; gera agendamento
+    pendente de confirmacao da clinica. Modelo Calendly do nicho.
+    Depende de GC2 (FEITO) e do hardening GC6 (codigo FEITO; falta
+    fechar 9090 antes de expor a terceiros).
+
+------------------------------------------------------------------------
+ PENDENCIAS MENORES / MELHORIAS
+------------------------------------------------------------------------
+[ ] M1 (pentest): migrar token do localStorage para cookie HttpOnly
+    (mitigado pelo CSP ja publicado; prioridade baixa).
+[ ] M3 (pentest): validar "acesso exclusivo da diretoria" no SERVIDOR
+    (hoje VITE_ALLOWED_EMAILS e so cosmetico no front) — ex.: exigir
+    PERFIL='Administrador' nos controllers do portal.
+[ ] Edicao de cliente pelo app (PUT /portal/clientes/{idLocal} ja existe
+    na API; falta tela de edicao no app — hoje so tem criacao).
+[ ] Backup automatico do Postgres da VM (cron pg_dump diario + retencao,
+    ver secao 10 do deploy/DEPLOY_LINODE.md; hoje so ha dumps manuais).
+
+------------------------------------------------------------------------
+ REFERENCIAS
+------------------------------------------------------------------------
+- Checklist de seguranca: PENDENCIAS_SEGURANCA.txt (nesta pasta)
+- API: C:\Users\krist\RetaguardaAgendamentoAPI (deploy: publish
+  self-contained linux-x64; VM nao tem runtime .NET)
+- Desktop: C:\Users\krist\AgendamentoWpfApp
+- VM: root@li927-43.members.linode.com (45.56.77.43), servico systemd
+  sparkcore-api, app em /var/www/sparkcore-api, nginx 443 -> Kestrel 9090
+========================================================================
