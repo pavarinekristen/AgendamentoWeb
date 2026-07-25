@@ -1,6 +1,6 @@
-import { MagnifyingGlass, UserPlus, CalendarBlank, CalendarPlus, FileText, ChartBar } from "@phosphor-icons/react";
+import { House, MagnifyingGlass, UserPlus, CalendarBlank, CalendarPlus, FileText, ChartBar } from "@phosphor-icons/react";
 
-export type Aba = "busca" | "cadastro" | "agenda" | "agendar" | "laudos" | "resumo";
+export type Aba = "inicio" | "busca" | "cadastro" | "agenda" | "agendar" | "laudos" | "resumo";
 
 interface Props {
   ativa: Aba;
@@ -9,6 +9,7 @@ interface Props {
 }
 
 export const ABAS: { id: Aba; rotulo: string; Icone: typeof MagnifyingGlass }[] = [
+  { id: "inicio", rotulo: "Inicio", Icone: House },
   { id: "busca", rotulo: "Busca", Icone: MagnifyingGlass },
   { id: "agenda", rotulo: "Agenda", Icone: CalendarBlank },
   { id: "agendar", rotulo: "Agendar", Icone: CalendarPlus },
@@ -20,7 +21,7 @@ export const ABAS: { id: Aba; rotulo: string; Icone: typeof MagnifyingGlass }[] 
 export function BottomNav({ ativa, onMudar, avisosBadge = 0 }: Props) {
   return (
     <nav className="flex-none border-t border-spark-line bg-spark-panel pb-[env(safe-area-inset-bottom)] lg:hidden">
-      <div className="mx-auto grid max-w-md grid-cols-6">
+      <div className="mx-auto grid max-w-md grid-cols-7">
         {ABAS.map(({ id, rotulo, Icone }) => {
           const ativo = ativa === id;
           return (

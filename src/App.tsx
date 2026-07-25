@@ -14,6 +14,7 @@ import { NotificationBell, type Notificacao } from "./components/NotificationBel
 import { GerenciarPasskeys } from "./components/GerenciarPasskeys";
 import { hojeIso } from "./lib/datas";
 import { LoginScreen } from "./screens/LoginScreen";
+import { InicioScreen } from "./screens/InicioScreen";
 import { SpotlightScreen } from "./screens/SpotlightScreen";
 import { CadastroScreen } from "./screens/CadastroScreen";
 import { AgendaScreen } from "./screens/AgendaScreen";
@@ -27,6 +28,7 @@ import { CommandPalette } from "./components/CommandPalette";
 // no desktop (lg+) e um sistema com menu lateral recolhivel, como o WPF.
 
 const TITULOS: Record<Aba, string> = {
+  inicio: "Inicio",
   busca: "Pesquisa de clientes",
   agenda: "Agenda",
   agendar: "Agendar consulta",
@@ -50,7 +52,7 @@ function atualizarBadgeApp(n: number) {
 export default function App() {
   const [usuario, setUsuario] = useState<AuthUsuario | null>(session.usuario);
   const [logado, setLogado] = useState<boolean>(() => Boolean(session.token));
-  const [aba, setAba] = useState<Aba>("busca");
+  const [aba, setAba] = useState<Aba>("inicio");
   // Pilha de navegacao: alimenta a setinha de voltar das secoes.
   const [, setHistorico] = useState<Aba[]>([]);
   const [menuRecolhido, setMenuRecolhido] = useState<boolean>(
@@ -84,7 +86,7 @@ export default function App() {
     setHistorico((h) => {
       const copia = [...h];
       const anterior = copia.pop();
-      setAba(anterior ?? "busca");
+      setAba(anterior ?? "inicio");
       return copia;
     });
   }, []);
@@ -100,7 +102,7 @@ export default function App() {
     session.clear();
     setLogado(false);
     setUsuario(null);
-    setAba("busca");
+    setAba("inicio");
     setHistorico([]);
     atualizarBadgeApp(0);
   }, []);
@@ -213,6 +215,16 @@ export default function App() {
 
   const conteudo = (
     <>
+      <div className={aba === "inicio" ? "tab-anim" : "hidden"}>
+        <InicioScreen
+          onSessaoExpirada={sair}
+          onNovaConsulta={() => abrirAgendar(hojeIso())}
+          onNovoCliente={() => mudarAba("cadastro")}
+          onBuscarCliente={() => mudarAba("busca")}
+          onAbrirAgenda={() => mudarAba("agenda")}
+          refreshSeq={agendaRefreshSeq}
+        />
+      </div>
       <div className={aba === "busca" ? "tab-anim" : "hidden"}>
         <SpotlightScreen onLogout={sair} termoExterno={buscaExterna} />
       </div>
