@@ -65,7 +65,7 @@
 ------------------------------------------------------------------------
  REFERENCIAS
 ------------------------------------------------------------------------
-- Checklist de seguranca: PENDENCIAS_SEGURANCA.txt (nesta pasta)
+- Checklist de seguranca: docs/PENDENCIAS_SEGURANCA.txt (nesta pasta)
 - API: C:\Users\krist\RetaguardaAgendamentoAPI (deploy: publish
   self-contained linux-x64; VM nao tem runtime .NET)
 - Desktop: C:\Users\krist\AgendamentoWpfApp
