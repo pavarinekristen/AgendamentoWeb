@@ -50,7 +50,8 @@ function atualizarBadgeApp(n: number) {
 }
 
 export default function App() {
-  const [usuario, setUsuario] = useState<AuthUsuario | null>(session.usuario);
+  // Usuario nunca e persistido: chega do /auth/me e fica so em memoria.
+  const [usuario, setUsuario] = useState<AuthUsuario | null>(null);
   const [logado, setLogado] = useState<boolean>(() => Boolean(session.token));
   const [aba, setAba] = useState<Aba>("inicio");
   // Pilha de navegacao: alimenta a setinha de voltar das secoes.
@@ -107,10 +108,15 @@ export default function App() {
     atualizarBadgeApp(0);
   }, []);
 
-  // Revalida o token guardado ao abrir; expirou, volta para o login.
+  // Revalida o token guardado ao abrir; expirou, volta para o login. E daqui
+  // que sai o nome exibido no cabecalho — nada disso fica gravado no aparelho.
   useEffect(() => {
     if (!logado) return;
-    validarSessao().catch(() => sair());
+    validarSessao()
+      .then((info) => {
+        if (info.usuario) setUsuario({ nome: info.usuario.nome, email: info.usuario.email });
+      })
+      .catch(() => sair());
   }, [logado, sair]);
 
   // Fonte das notificacoes: vencimentos criticos + consultas de hoje.

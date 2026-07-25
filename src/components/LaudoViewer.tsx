@@ -13,9 +13,19 @@ interface Props {
   onFechar: () => void;
 }
 
+// Android Chrome nao tem visualizador de PDF para <iframe> (area fica em
+// branco) e o iOS em PWA standalone falha na maior parte das vezes. No celular
+// nao tentamos embutir: oferecemos Abrir/Baixar/Compartilhar, que usam o
+// visualizador nativo do aparelho.
+function ehCelular(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /android|iphone|ipod|ipad|mobile/i.test(navigator.userAgent || "");
+}
+
 export function LaudoViewer({ blob, nomeArquivo, titulo, onFechar }: Props) {
   const url = useMemo(() => (blob ? URL.createObjectURL(blob) : ""), [blob]);
   const [hint, setHint] = useState("");
+  const celular = useMemo(ehCelular, []);
 
   useEffect(() => {
     if (!url) return;
@@ -75,11 +85,32 @@ export function LaudoViewer({ blob, nomeArquivo, titulo, onFechar }: Props) {
         </button>
       </header>
 
-      {/* Visualizacao do PDF. Muitos navegadores mobile nao renderizam PDF em
-          iframe — por isso a instrucao de fallback vive no rodape (sempre visivel),
-          nunca atras do iframe (onde ficava escondida justamente quando falhava). */}
+      {/* No desktop o PDF aparece embutido; no celular o iframe fica em branco,
+          entao mostramos um cartao com o botao que chama o visualizador nativo. */}
       <div className="relative flex-1 bg-spark-surface">
-        {url ? (
+        {url && celular ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-6 text-center">
+            <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-spark-soft">
+              <FilePdf size={40} className="text-spark-accent" weight="fill" />
+            </div>
+            <p className="mt-5 text-[16px] font-semibold text-spark-ink">Laudo pronto</p>
+            <p className="text-[13px] text-spark-muted">{nomeArquivo}</p>
+            {/* Ancora de verdade: o toque e um gesto do usuario, entao nao cai
+                no bloqueio de pop-up como aconteceria com window.open. */}
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E87916] to-spark-accent text-[15px] font-semibold text-white shadow-[0_8px_18px_-8px_rgba(224,103,10,0.8)] transition active:scale-[0.98]"
+            >
+              <FilePdf size={18} weight="bold" />
+              Abrir laudo
+            </a>
+            <p className="mt-3 text-[12px] text-spark-muted">
+              Nao abriu? Use Baixar ou Compartilhar abaixo.
+            </p>
+          </div>
+        ) : url ? (
           <iframe title={nomeArquivo} src={url} className="h-full w-full border-0" />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-spark-muted">
@@ -92,7 +123,7 @@ export function LaudoViewer({ blob, nomeArquivo, titulo, onFechar }: Props) {
       <footer className="flex-none border-t border-spark-line bg-spark-panel px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3">
         {hint ? (
           <p className="mb-2 text-center text-[13px] font-medium text-spark-success">{hint}</p>
-        ) : blob ? (
+        ) : blob && !celular ? (
           <p className="mb-2 text-center text-[12px] text-spark-muted">
             Nao abriu a visualizacao neste aparelho? Use Baixar ou Compartilhar.
           </p>

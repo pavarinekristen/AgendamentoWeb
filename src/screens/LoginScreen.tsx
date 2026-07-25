@@ -52,7 +52,7 @@ export function LoginScreen({ onLogged }: Props) {
       setErro("Este acesso e exclusivo da diretoria.");
       return;
     }
-    session.save(auth.token!, auth.usuario);
+    session.save(auth.token!);
     onLogged(auth.usuario ?? { email: emailRetornado });
   }
 

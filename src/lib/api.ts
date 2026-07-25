@@ -10,7 +10,17 @@ import { create, get } from "@github/webauthn-json";
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/+$/, "");
 const TOKEN_KEY = "agendamentoweb.token";
-const USER_KEY = "agendamentoweb.usuario";
+
+// Chave antiga: guardava nome/e-mail/perfil do usuario no localStorage, visiveis
+// em DevTools > Application. Nao gravamos mais nada disso — o app pega os dados
+// do /auth/me e mantem so em memoria. Isto apaga o residuo dos aparelhos que ja
+// tinham a chave gravada por versoes anteriores.
+const USER_KEY_LEGADO = "agendamentoweb.usuario";
+try {
+  localStorage.removeItem(USER_KEY_LEGADO);
+} catch {
+  /* modo privado/storage bloqueado: nada a limpar */
+}
 
 export interface AuthUsuario {
   nome?: string;
@@ -76,26 +86,18 @@ export class ApiError extends Error {
   }
 }
 
+// So o token e persistido (para a sessao sobreviver ao fechar o app). Nome,
+// e-mail e perfil vivem apenas em memoria, vindos do /auth/me a cada abertura.
 export const session = {
   get token(): string | null {
     return localStorage.getItem(TOKEN_KEY);
   },
-  get usuario(): AuthUsuario | null {
-    const raw = localStorage.getItem(USER_KEY);
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as AuthUsuario;
-    } catch {
-      return null;
-    }
-  },
-  save(token: string, usuario: AuthUsuario | undefined) {
+  save(token: string) {
     localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem(USER_KEY, JSON.stringify(usuario ?? {}));
   },
   clear() {
     localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(USER_KEY_LEGADO);
   },
 };
 
