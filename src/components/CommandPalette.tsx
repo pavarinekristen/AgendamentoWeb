@@ -145,7 +145,7 @@ export function CommandPalette({ aberto, onFechar, onNavegar, onAbrirCliente }: 
         onMouseDown={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label="Busca rapida e comandos"
+        aria-label="Busca rápida e comandos"
       >
         <div className="flex items-center gap-3 border-b border-spark-line px-4">
           <MagnifyingGlass size={20} className="shrink-0 text-spark-muted" />

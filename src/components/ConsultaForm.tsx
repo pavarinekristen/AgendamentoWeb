@@ -23,6 +23,8 @@ const MOTIVOS = ["Admissao", "Periodico", "Retorno ao trabalho", "Mudanca de fun
 
 interface Props {
   dataInicial: string; // yyyy-MM-dd (dia selecionado no calendario)
+  // HH:mm vindo do slot clicado na grade da semana: marcar sem redigitar hora.
+  horarioInicial?: string;
   consulta?: AgendaItem; // presente = edicao
   // true = renderiza como bloco normal (secao Agendar); false = overlay modal.
   inline?: boolean;
@@ -33,9 +35,9 @@ interface Props {
 
 const inputCls =
   "h-12 w-full rounded-xl border border-spark-inputline bg-spark-field px-3.5 text-[15px] text-spark-ink outline-none transition placeholder:text-spark-faint focus:border-spark-accent focus:ring-2 focus:ring-spark-accent/20";
-const labelCls = "mb-1.5 block text-[12.5px] font-semibold text-[#44403C]";
+const labelCls = "mb-1.5 block text-[12.5px] font-semibold text-spark-label";
 
-export function ConsultaForm({ dataInicial, consulta, inline = false, onFechar, onSalvo, onSessaoExpirada }: Props) {
+export function ConsultaForm({ dataInicial, horarioInicial, consulta, inline = false, onFechar, onSalvo, onSessaoExpirada }: Props) {
   const editando = Boolean(consulta);
   const toast = useToast();
 
@@ -48,7 +50,7 @@ export function ConsultaForm({ dataInicial, consulta, inline = false, onFechar, 
   const debounce = useRef<number>(0);
 
   const [data, setData] = useState(consulta?.data ?? dataInicial);
-  const [horario, setHorario] = useState(consulta?.horario ?? "");
+  const [horario, setHorario] = useState(consulta?.horario ?? horarioInicial ?? "");
   const [local, setLocal] = useState(consulta?.local ?? "");
   const [profissionais, setProfissionais] = useState<ProfissionalSala[]>([]);
   const [profissionalIdLocal, setProfissionalIdLocal] = useState("");
@@ -109,10 +111,10 @@ export function ConsultaForm({ dataInicial, consulta, inline = false, onFechar, 
     e.preventDefault();
     setErro("");
 
-    if (!clienteIdLocal) return setErro("Selecione o funcionario cadastrado.");
+    if (!clienteIdLocal) return setErro("Selecione o funcionário cadastrado.");
     if (!data) return setErro("Informe a data da consulta.");
-    if (!horario.trim()) return setErro("Informe o horario.");
-    if (!local.trim()) return setErro("Local da consulta e obrigatorio.");
+    if (!horario.trim()) return setErro("Informe o horário.");
+    if (!local.trim()) return setErro("Local da consulta é obrigatório.");
 
     const payload = {
       clienteIdLocal,
@@ -149,15 +151,15 @@ export function ConsultaForm({ dataInicial, consulta, inline = false, onFechar, 
     if (!consulta) return;
     const quando = [consulta.data.split("-").reverse().join("/"), consulta.horario]
       .filter(Boolean)
-      .join(" as ");
-    if (!window.confirm(`Excluir a consulta de ${consulta.clienteNome || "este funcionario"} em ${quando}?`))
+      .join(" às ");
+    if (!window.confirm(`Excluir a consulta de ${consulta.clienteNome || "este funcionário"} em ${quando}?`))
       return;
 
     setExcluindo(true);
     setErro("");
     try {
       await excluirConsulta(consulta.idLocal);
-      toast.sucesso("Consulta excluida.");
+      toast.sucesso("Consulta excluída.");
       onSalvo();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -195,7 +197,7 @@ export function ConsultaForm({ dataInicial, consulta, inline = false, onFechar, 
             type="button"
             aria-label="Fechar"
             onClick={onFechar}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-spark-body transition active:bg-spark-hover"
+            className="flex h-10 w-10 items-center justify-center rounded-sm text-spark-body transition active:bg-spark-hover"
           >
             <X size={20} />
           </button>
@@ -211,7 +213,7 @@ export function ConsultaForm({ dataInicial, consulta, inline = false, onFechar, 
         }
       >
         {/* Funcionario cadastrado */}
-        <span className={labelCls}>Funcionario cadastrado *</span>
+        <span className={labelCls}>Funcionário cadastrado *</span>
         {clienteIdLocal ? (
           <div className="mb-3 flex items-center justify-between gap-2 rounded-xl border border-spark-line bg-spark-panel px-3.5 py-3">
             <p className="min-w-0 flex-1 truncate text-[15px] font-semibold text-spark-ink">{clienteNome}</p>
@@ -333,7 +335,7 @@ export function ConsultaForm({ dataInicial, consulta, inline = false, onFechar, 
         </label>
 
         <label className="mb-4 block">
-          <span className={labelCls}>Observacoes</span>
+          <span className={labelCls}>Observações</span>
           <textarea
             className={`${inputCls} h-24 resize-none py-2.5`}
             value={observacoes}
@@ -350,10 +352,10 @@ export function ConsultaForm({ dataInicial, consulta, inline = false, onFechar, 
         <button
           type="submit"
           disabled={salvando}
-          className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E87916] to-spark-accent text-base font-semibold text-white shadow-[0_10px_24px_-10px_rgba(224,103,10,0.7)] transition active:scale-[0.98] disabled:opacity-60"
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-spark-accent hover:bg-spark-accent-strong text-base font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
         >
           {salvando && <CircleNotch size={20} className="animate-spin" />}
-          {salvando ? "Salvando..." : editando ? "Salvar alteracoes" : "Agendar consulta"}
+          {salvando ? "Salvando..." : editando ? "Salvar alterações" : "Agendar consulta"}
         </button>
 
         {editando && (

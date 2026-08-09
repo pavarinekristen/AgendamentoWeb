@@ -1,4 +1,14 @@
-import { House, MagnifyingGlass, UserPlus, CalendarBlank, CalendarPlus, FileText, ChartBar } from "@phosphor-icons/react";
+// "File" e o nome de um tipo global do DOM: importamos com alias para nao
+// sombrear o global dentro deste arquivo.
+import {
+  House,
+  MagnifyingGlass,
+  Users,
+  CalendarBlank,
+  CalendarPlus,
+  File as FileIcon,
+  ChartBar,
+} from "@phosphor-icons/react";
 
 export type Aba = "inicio" | "busca" | "cadastro" | "agenda" | "agendar" | "laudos" | "resumo";
 
@@ -9,12 +19,12 @@ interface Props {
 }
 
 export const ABAS: { id: Aba; rotulo: string; Icone: typeof MagnifyingGlass }[] = [
-  { id: "inicio", rotulo: "Inicio", Icone: House },
+  { id: "inicio", rotulo: "Início", Icone: House },
   { id: "busca", rotulo: "Busca", Icone: MagnifyingGlass },
   { id: "agenda", rotulo: "Agenda", Icone: CalendarBlank },
   { id: "agendar", rotulo: "Agendar", Icone: CalendarPlus },
-  { id: "cadastro", rotulo: "Cadastro", Icone: UserPlus },
-  { id: "laudos", rotulo: "Laudos", Icone: FileText },
+  { id: "cadastro", rotulo: "Cadastro", Icone: Users },
+  { id: "laudos", rotulo: "Laudos", Icone: FileIcon },
   { id: "resumo", rotulo: "Resumo", Icone: ChartBar },
 ];
 

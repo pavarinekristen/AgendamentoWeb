@@ -22,7 +22,7 @@ export function CadastroScreen({ onSessaoExpirada, onBuscarCliente, onVoltar }: 
     <div className="px-4 py-4">
       <SectionHeader
         titulo="Novo cliente"
-        subtitulo="Cadastro completo do funcionario, igual ao do sistema desktop."
+        subtitulo="Cadastro completo do funcionário, igual ao do sistema desktop."
         Icone={UserPlus}
         onVoltar={onVoltar}
       />
@@ -37,14 +37,14 @@ export function CadastroScreen({ onSessaoExpirada, onBuscarCliente, onVoltar }: 
             <button
               type="button"
               onClick={() => setSalvo(null)}
-              className="rounded-full bg-spark-soft px-3.5 py-1.5 text-[13px] font-semibold text-spark-accent-strong"
+              className="rounded-sm bg-spark-soft px-3.5 py-1.5 text-[13px] font-semibold text-spark-accent-strong"
             >
               Cadastrar outro
             </button>
             <button
               type="button"
               onClick={() => onBuscarCliente(salvo)}
-              className="rounded-full bg-spark-surface px-3.5 py-1.5 text-[13px] font-semibold text-spark-body"
+              className="rounded-sm bg-spark-surface px-3.5 py-1.5 text-[13px] font-semibold text-spark-body"
             >
               Ver na busca
             </button>
@@ -52,7 +52,7 @@ export function CadastroScreen({ onSessaoExpirada, onBuscarCliente, onVoltar }: 
         </div>
       )}
 
-      <div className="rounded-2xl border border-spark-line bg-spark-panel px-4 py-4 shadow-[0_10px_24px_-20px_rgba(28,25,23,0.35)]">
+      <div className="rounded-2xl border border-spark-line bg-spark-panel px-4 py-4">
         <ClienteForm
           key={chaveForm}
           inline

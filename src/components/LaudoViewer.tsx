@@ -79,7 +79,7 @@ export function LaudoViewer({ blob, nomeArquivo, titulo, onFechar }: Props) {
           type="button"
           aria-label="Fechar"
           onClick={onFechar}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-spark-body transition active:bg-spark-hover"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm text-spark-body transition active:bg-spark-hover"
         >
           <X size={20} />
         </button>
@@ -101,7 +101,7 @@ export function LaudoViewer({ blob, nomeArquivo, titulo, onFechar }: Props) {
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-6 flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E87916] to-spark-accent text-[15px] font-semibold text-white shadow-[0_8px_18px_-8px_rgba(224,103,10,0.8)] transition active:scale-[0.98]"
+              className="mt-6 flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-spark-accent hover:bg-spark-accent-strong text-[15px] font-semibold text-white transition active:scale-[0.98]"
             >
               <FilePdf size={18} weight="bold" />
               Abrir laudo
@@ -132,7 +132,7 @@ export function LaudoViewer({ blob, nomeArquivo, titulo, onFechar }: Props) {
           <button
             type="button"
             onClick={baixar}
-            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E87916] to-spark-accent text-[15px] font-semibold text-white shadow-[0_8px_18px_-8px_rgba(224,103,10,0.8)] transition active:scale-[0.98]"
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-spark-accent hover:bg-spark-accent-strong text-[15px] font-semibold text-white transition active:scale-[0.98]"
           >
             <DownloadSimple size={18} weight="bold" />
             Baixar

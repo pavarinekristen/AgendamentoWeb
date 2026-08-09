@@ -57,7 +57,7 @@ export function DonutChart({ segments, size = 168, thickness = 22, centerLabel =
         className="relative shrink-0"
         style={{ width: size, height: size }}
         role="img"
-        aria-label={`Grafico de rosca. ${resumo}.`}
+        aria-label={`Gráfico de rosca. ${resumo}.`}
         onMouseLeave={() => setAtivo(null)}
       >
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
@@ -94,7 +94,7 @@ export function DonutChart({ segments, size = 168, thickness = 22, centerLabel =
             {centroRotulo}
           </span>
         </div>
-        <span className="sr-only" aria-hidden="false">{`Identificador do grafico ${gradId}`}</span>
+        <span className="sr-only" aria-hidden="false">{`Identificador do gráfico ${gradId}`}</span>
       </div>
 
       {/* legenda: sempre presente, com rotulo + valor + % (identidade nunca so por cor) */}

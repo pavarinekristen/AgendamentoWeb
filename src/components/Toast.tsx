@@ -105,7 +105,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 type="button"
                 aria-label="Fechar aviso"
                 onClick={() => remover(t.id)}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-spark-muted transition active:bg-spark-hover"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-spark-muted transition active:bg-spark-hover"
               >
                 <X size={15} />
               </button>

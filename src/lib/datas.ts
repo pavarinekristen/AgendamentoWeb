@@ -1,7 +1,7 @@
 // Utilitarios de data do calendario (sem dependencias, datas como yyyy-MM-dd).
 
 export const MESES = [
-  "Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho",
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
 
@@ -53,8 +53,27 @@ export function chaveMes(ano: number, mes: number): string {
   return `${ano}-${String(mes + 1).padStart(2, "0")}`;
 }
 
+export function somarDias(iso: string, n: number): string {
+  const [ano, mes, dia] = iso.split("-").map(Number);
+  const d = new Date(ano, mes - 1, dia);
+  d.setDate(d.getDate() + n);
+  return paraIso(d);
+}
+
+// Domingo da semana do dia informado (mesma origem da grade do mes, que
+// tambem comeca no domingo — ver DIAS_SEMANA).
+export function inicioSemana(iso: string): string {
+  const [ano, mes, dia] = iso.split("-").map(Number);
+  const d = new Date(ano, mes - 1, dia);
+  return somarDias(iso, -d.getDay());
+}
+
+export function diasDaSemana(inicioIso: string): string[] {
+  return Array.from({ length: 7 }, (_, i) => somarDias(inicioIso, i));
+}
+
 export function nomeDiaSemana(iso: string): string {
-  const nomes = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"];
+  const nomes = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   const [ano, mes, dia] = iso.split("-").map(Number);
   return nomes[new Date(ano, mes - 1, dia).getDay()];
 }

@@ -19,7 +19,7 @@ export function SectionHeader({ titulo, subtitulo, Icone, onVoltar }: Props) {
           type="button"
           aria-label="Voltar"
           onClick={onVoltar}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-spark-body transition hover:bg-spark-hover active:scale-95"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm text-spark-body transition hover:bg-spark-hover active:scale-95"
         >
           <CaretLeft size={20} weight="bold" />
         </button>

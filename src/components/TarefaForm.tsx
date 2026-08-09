@@ -16,7 +16,7 @@ interface Props {
 
 const inputCls =
   "h-12 w-full rounded-xl border border-spark-inputline bg-spark-field px-3.5 text-[15px] text-spark-ink outline-none transition placeholder:text-spark-faint focus:border-spark-accent focus:ring-2 focus:ring-spark-accent/20";
-const labelCls = "mb-1.5 block text-[12.5px] font-semibold text-[#44403C]";
+const labelCls = "mb-1.5 block text-[12.5px] font-semibold text-spark-label";
 
 export function TarefaForm({ dia, tarefa, onFechar, onSalvo, onSessaoExpirada }: Props) {
   const editando = Boolean(tarefa);
@@ -81,7 +81,7 @@ export function TarefaForm({ dia, tarefa, onFechar, onSalvo, onSessaoExpirada }:
     setErro("");
     try {
       await excluirTarefa(tarefa.idLocal);
-      toast.sucesso("Tarefa excluida.");
+      toast.sucesso("Tarefa excluída.");
       onSalvo();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -111,7 +111,7 @@ export function TarefaForm({ dia, tarefa, onFechar, onSalvo, onSessaoExpirada }:
             type="button"
             aria-label="Fechar"
             onClick={onFechar}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-spark-body transition hover:bg-spark-hover"
+            className="flex h-9 w-9 items-center justify-center rounded-sm text-spark-body transition hover:bg-spark-hover"
           >
             <X size={19} />
           </button>
@@ -147,7 +147,7 @@ export function TarefaForm({ dia, tarefa, onFechar, onSalvo, onSessaoExpirada }:
           </div>
 
           <label className="mb-4 block">
-            <span className={labelCls}>Observacoes</span>
+            <span className={labelCls}>Observações</span>
             <textarea
               className={`${inputCls} h-20 resize-none py-2.5`}
               value={observacoes}
@@ -164,10 +164,10 @@ export function TarefaForm({ dia, tarefa, onFechar, onSalvo, onSessaoExpirada }:
           <button
             type="submit"
             disabled={salvando}
-            className="flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E87916] to-spark-accent py-3.5 text-base font-semibold text-white shadow-[0_10px_24px_-10px_rgba(224,103,10,0.7)] transition active:scale-[0.98] disabled:opacity-60"
+            className="flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-spark-accent hover:bg-spark-accent-strong py-3.5 text-base font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
           >
             {salvando && <CircleNotch size={20} className="animate-spin" />}
-            {salvando ? "Salvando..." : editando ? "Salvar alteracoes" : "Criar tarefa"}
+            {salvando ? "Salvando..." : editando ? "Salvar alterações" : "Criar tarefa"}
           </button>
 
           {editando && (

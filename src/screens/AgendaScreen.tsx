@@ -5,6 +5,7 @@ import {
   CalendarCheck,
   CalendarBlank,
   Kanban,
+  GridFour,
   CircleNotch,
   MapPin,
   MagnifyingGlass,
@@ -25,6 +26,8 @@ import {
 } from "../lib/api";
 import { ConsultaForm } from "../components/ConsultaForm";
 import { AgendaQuadro, type QuadroItem } from "../components/AgendaQuadro";
+import { AgendaSemana } from "../components/AgendaSemana";
+import { statusInfo } from "../lib/status";
 import { TarefaForm } from "../components/TarefaForm";
 import { SkeletonList } from "../components/Skeleton";
 import { useToast } from "../components/Toast";
@@ -36,6 +39,8 @@ import {
   hojeIso,
   formatarBr,
   nomeDiaSemana,
+  inicioSemana,
+  somarDias,
 } from "../lib/datas";
 
 interface Props {
@@ -50,17 +55,15 @@ interface Props {
   refreshSeq?: number;
 }
 
-// Cor por status: barra lateral do cartao, ponto da timeline e chip de rotulo.
-function statusInfo(status?: string): { bar: string; dot: string; chip: string } {
-  const s = (status || "").toLowerCase();
-  if (s.includes("cancel"))
-    return { bar: "bg-spark-danger", dot: "bg-spark-danger", chip: "bg-spark-danger/10 text-spark-danger" };
-  if (s.includes("realiz") || s.includes("conclu"))
-    return { bar: "bg-spark-success", dot: "bg-spark-success", chip: "bg-spark-success/10 text-spark-success" };
-  return { bar: "bg-spark-accent", dot: "bg-spark-accent", chip: "bg-spark-soft text-spark-accent-strong" };
-}
-
 const porHorario = (a: AgendaItem, b: AgendaItem) => (a.horario || "").localeCompare(b.horario || "");
+
+type Vista = "calendario" | "semana" | "quadro";
+
+// Estado do formulario de consulta: edicao de uma existente, ou criacao a
+// partir de um slot vazio da grade da semana (dia e hora ja preenchidos).
+type FormState =
+  | { modo: "editar"; item: AgendaItem }
+  | { modo: "criar"; data: string; horario: string };
 
 export function AgendaScreen({
   onSessaoExpirada,
@@ -77,11 +80,16 @@ export function AgendaScreen({
   const [cache, setCache] = useState<Record<string, AgendaItem[]>>({});
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
-  // Formulario de consulta: null = fechado; AgendaItem = edicao (criar consulta
-  // agora vive na secao Agendar).
-  const [form, setForm] = useState<AgendaItem | null>(null);
-  // Alternador de visao: calendario (planejar) x quadro Kanban (operar o dia).
-  const [vista, setVista] = useState<"calendario" | "quadro">("calendario");
+  // Formulario de consulta: null = fechado. Edicao abre com a consulta; a grade
+  // da semana abre em modo criacao ja com dia e hora do slot clicado.
+  const [form, setForm] = useState<FormState | null>(null);
+  // Alternador de visao: mes (planejar) x semana (encaixar horario) x quadro
+  // Kanban (operar o dia de hoje).
+  const [vista, setVista] = useState<Vista>("calendario");
+  // Semana visivel da grade de horarios, navegavel sem mexer no mes.
+  const [semanaInicio, setSemanaInicio] = useState(() => inicioSemana(hojeIso()));
+  const [cacheSemana, setCacheSemana] = useState<Record<string, AgendaItem[]>>({});
+  const [carregandoSemana, setCarregandoSemana] = useState(false);
   // Lista de profissionais/salas: usada para reconstruir o payload ao mover um
   // card (a agenda so traz o NOME do profissional; casamos pelo nome -> id).
   const [profissionais, setProfissionais] = useState<ProfissionalSala[]>([]);
@@ -142,7 +150,7 @@ export function AgendaScreen({
           onSessaoExpirada();
           return;
         }
-        setErro("Nao foi possivel carregar a agenda deste mes.");
+        setErro("Não foi possível carregar a agenda deste mês.");
       })
       .finally(() => {
         if (!controller.signal.aborted) setCarregando(false);
@@ -150,6 +158,37 @@ export function AgendaScreen({
 
     return () => controller.abort();
   }, [chave, ano, mes, cache, onSessaoExpirada]);
+
+  // Grade da semana: intervalo proprio, e nao um recorte do cache mensal — uma
+  // semana cruza a virada do mes e precisaria dos dois meses carregados.
+  useEffect(() => {
+    if (vista !== "semana" || cacheSemana[semanaInicio]) return;
+
+    const controller = new AbortController();
+    setCarregandoSemana(true);
+    setErro("");
+
+    listarAgenda(semanaInicio, somarDias(semanaInicio, 6), controller.signal)
+      .then((itens) => setCacheSemana((c) => ({ ...c, [semanaInicio]: itens })))
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        if (err instanceof ApiError && err.status === 401) {
+          onSessaoExpirada();
+          return;
+        }
+        setErro("Não foi possível carregar a semana.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setCarregandoSemana(false);
+      });
+
+    return () => controller.abort();
+  }, [vista, semanaInicio, cacheSemana, onSessaoExpirada]);
+
+  const itensSemana = useMemo(
+    () => cacheSemana[semanaInicio] ?? [],
+    [cacheSemana, semanaInicio],
+  );
 
   const porDia = useMemo(() => {
     const mapa = new Map<string, AgendaItem[]>();
@@ -225,6 +264,7 @@ export function AgendaScreen({
   }
 
   function atualizarAgenda() {
+    setCacheSemana({});
     setCache((c) => {
       const novo = { ...c };
       delete novo[chave];
@@ -234,6 +274,9 @@ export function AgendaScreen({
 
   function aposSalvar() {
     setForm(null);
+    // A consulta salva pode ter caido em qualquer semana (o formulario deixa
+    // trocar a data), entao a grade inteira e invalidada, nao so a visivel.
+    setCacheSemana({});
     // Invalida o cache do mes visivel: o proximo render rebusca na API.
     setCache((c) => {
       const novo = { ...c };
@@ -252,6 +295,13 @@ export function AgendaScreen({
     setVista("quadro");
   }
 
+  // A semana abre sempre na do dia selecionado no mes: o usuario acabou de
+  // apontar um dia no calendario, a grade tem que cair nele.
+  function abrirSemana() {
+    setSemanaInicio(inicioSemana(selecionado));
+    setVista("semana");
+  }
+
   // Mover um card do quadro = mudar o status da consulta (PUT). Atualizacao
   // otimista: o card anda na hora e volta se a API falhar.
   async function moverConsulta(item: AgendaItem, novoStatus: string) {
@@ -262,7 +312,7 @@ export function AgendaScreen({
     // vinculo num PUT — abrimos o editor completo.
     if (item.profissionalSala && !profissionais.some((p) => p.nome === item.profissionalSala)) {
       toast.info("Abra a consulta para mudar o status (vinculo de profissional).");
-      setForm(item);
+      setForm({ modo: "editar", item });
       return;
     }
 
@@ -296,7 +346,7 @@ export function AgendaScreen({
         onSessaoExpirada();
         return;
       }
-      toast.erro(err instanceof ApiError ? err.message : "Nao foi possivel mover a consulta.");
+      toast.erro(err instanceof ApiError ? err.message : "Não foi possível mover a consulta.");
     } finally {
       setMovendo((s) => {
         const n = new Set(s);
@@ -332,7 +382,7 @@ export function AgendaScreen({
         onSessaoExpirada();
         return;
       }
-      toast.erro(err instanceof ApiError ? err.message : "Nao foi possivel mover a tarefa.");
+      toast.erro(err instanceof ApiError ? err.message : "Não foi possível mover a tarefa.");
     } finally {
       setMovendo((s) => {
         const n = new Set(s);
@@ -352,7 +402,7 @@ export function AgendaScreen({
       }
       return;
     }
-    setForm(item);
+    setForm({ modo: "editar", item });
   }
 
   function novaTarefa() {
@@ -375,7 +425,20 @@ export function AgendaScreen({
           }`}
         >
           <CalendarBlank size={16} weight={vista === "calendario" ? "fill" : "regular"} />
-          Calendario
+          Mes
+        </button>
+        <button
+          type="button"
+          onClick={abrirSemana}
+          aria-pressed={vista === "semana"}
+          className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition ${
+            vista === "semana"
+              ? "bg-spark-panel text-spark-accent-strong shadow-sm"
+              : "text-spark-muted hover:text-spark-body"
+          }`}
+        >
+          <GridFour size={16} weight={vista === "semana" ? "fill" : "regular"} />
+          Semana
         </button>
         <button
           type="button"
@@ -404,14 +467,32 @@ export function AgendaScreen({
           onAgendar={onAgendar}
           onNovaTarefa={novaTarefa}
         />
+      ) : vista === "semana" ? (
+        <>
+          {erro && (
+            <p className="mb-3 rounded-xl border border-spark-danger/20 bg-spark-danger/5 px-4 py-3 text-center text-sm text-spark-danger">
+              {erro}
+            </p>
+          )}
+          <AgendaSemana
+            inicio={semanaInicio}
+            itens={itensSemana}
+            hoje={hoje}
+            carregando={carregandoSemana}
+            onMudarSemana={(delta) => setSemanaInicio((s) => somarDias(s, delta * 7))}
+            onHoje={() => setSemanaInicio(inicioSemana(hoje))}
+            onSlotLivre={(data, horario) => setForm({ modo: "criar", data, horario })}
+            onEditar={(item) => setForm({ modo: "editar", item })}
+          />
+        </>
       ) : (
       <div className="lg:grid lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start lg:gap-6">
         {/* ── Coluna esquerda: hoje + calendario (fixa no desktop) ── */}
         <div className="space-y-4 lg:sticky lg:top-2">
           {/* Resumo de hoje */}
           {vendoMesAtual && (
-            <div className="flex items-center gap-3 rounded-2xl border border-spark-line bg-spark-panel px-4 py-3.5 shadow-[0_10px_24px_-20px_rgba(28,25,23,0.35)]">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-spark-accent to-spark-accent-light text-white shadow-sm">
+            <div className="flex items-center gap-3 rounded-2xl border border-spark-line bg-spark-panel px-4 py-3.5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-spark-accent text-white">
                 <CalendarCheck size={22} weight="fill" />
               </div>
               <div className="min-w-0 flex-1">
@@ -439,7 +520,7 @@ export function AgendaScreen({
                 <button
                   type="button"
                   onClick={voltarParaHoje}
-                  className="shrink-0 rounded-full bg-spark-soft px-3 py-1.5 text-[13px] font-semibold text-spark-accent-strong transition active:scale-95"
+                  className="shrink-0 rounded-sm bg-spark-soft px-3 py-1.5 text-[13px] font-semibold text-spark-accent-strong transition active:scale-95"
                 >
                   Ver hoje
                 </button>
@@ -448,7 +529,7 @@ export function AgendaScreen({
           )}
 
           {/* Calendario */}
-          <div className="rounded-2xl border border-spark-line bg-spark-panel p-4 shadow-[0_10px_24px_-20px_rgba(28,25,23,0.35)]">
+          <div className="rounded-2xl border border-spark-line bg-spark-panel p-4">
             <div className="mb-3 flex items-center justify-between">
               <p className="font-display text-lg font-bold text-spark-ink">
                 {MESES[mes]} <span className="font-medium text-spark-muted">{ano}</span>
@@ -459,7 +540,7 @@ export function AgendaScreen({
                   aria-label="Atualizar agenda"
                   onClick={atualizarAgenda}
                   disabled={carregando}
-                  className="mr-0.5 flex h-9 w-9 items-center justify-center rounded-full text-spark-muted transition hover:bg-spark-hover hover:text-spark-body disabled:opacity-60"
+                  className="mr-0.5 flex h-9 w-9 items-center justify-center rounded-sm text-spark-muted transition hover:bg-spark-hover hover:text-spark-body disabled:opacity-60"
                 >
                   <CircleNotch size={17} className={carregando ? "animate-spin" : ""} />
                 </button>
@@ -467,24 +548,24 @@ export function AgendaScreen({
                   <button
                     type="button"
                     onClick={voltarParaHoje}
-                    className="mr-0.5 rounded-full bg-spark-soft px-3 py-1.5 text-[13px] font-semibold text-spark-accent-strong transition active:scale-95"
+                    className="mr-0.5 rounded-sm bg-spark-soft px-3 py-1.5 text-[13px] font-semibold text-spark-accent-strong transition active:scale-95"
                   >
                     Hoje
                   </button>
                 )}
                 <button
                   type="button"
-                  aria-label="Mes anterior"
+                  aria-label="Mês anterior"
                   onClick={() => mudarMes(-1)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-spark-body transition hover:bg-spark-hover"
+                  className="flex h-9 w-9 items-center justify-center rounded-sm text-spark-body transition hover:bg-spark-hover"
                 >
                   <CaretLeft size={17} weight="bold" />
                 </button>
                 <button
                   type="button"
-                  aria-label="Proximo mes"
+                  aria-label="Próximo mês"
                   onClick={() => mudarMes(1)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-spark-body transition hover:bg-spark-hover"
+                  className="flex h-9 w-9 items-center justify-center rounded-sm text-spark-body transition hover:bg-spark-hover"
                 >
                   <CaretRight size={17} weight="bold" />
                 </button>
@@ -521,9 +602,9 @@ export function AgendaScreen({
                     className="flex flex-col items-center py-0.5"
                   >
                     <span
-                      className={`flex h-10 w-10 items-center justify-center rounded-full text-[15px] transition ${
+                      className={`flex h-10 w-10 items-center justify-center rounded-sm text-[15px] transition ${
                         ativo
-                          ? "bg-spark-accent font-bold text-white shadow-[0_6px_14px_-6px_rgba(224,103,10,0.8)]"
+                          ? "bg-spark-accent font-bold text-white"
                           : ehHoje
                             ? "bg-spark-soft font-bold text-spark-accent-strong ring-1 ring-spark-accent/30"
                             : cel.doMes
@@ -569,7 +650,7 @@ export function AgendaScreen({
               <button
                 type="button"
                 onClick={() => onAgendar(selecionado)}
-                className="flex shrink-0 items-center gap-1 rounded-full bg-gradient-to-br from-[#E87916] to-spark-accent px-3.5 py-2 text-[13px] font-semibold text-white shadow-[0_8px_18px_-8px_rgba(224,103,10,0.8)] transition active:scale-95"
+                className="flex shrink-0 items-center gap-1 rounded-sm bg-spark-accent hover:bg-spark-accent-strong px-3.5 py-2 text-[13px] font-semibold text-white transition active:scale-95"
               >
                 <Plus size={15} weight="bold" />
                 Agendar
@@ -580,7 +661,7 @@ export function AgendaScreen({
 
             {doDia.length === 0 && !carregando && (
               <div className="flex flex-col items-center rounded-2xl border border-dashed border-spark-inputline bg-spark-surface/60 px-4 py-10 text-center">
-                <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-spark-soft/70">
+                <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-sm bg-spark-soft/70">
                   <CalendarCheck size={22} className="text-spark-accent/70" />
                 </div>
                 <p className="text-sm font-medium text-spark-body">Nenhuma consulta neste dia</p>
@@ -594,7 +675,7 @@ export function AgendaScreen({
                 return (
                   <li
                     key={c.idLocal}
-                    className="relative overflow-hidden rounded-2xl border border-spark-line bg-spark-panel shadow-[0_10px_24px_-20px_rgba(28,25,23,0.35)] transition hover:shadow-[0_14px_30px_-18px_rgba(28,25,23,0.4)]"
+                    className="relative overflow-hidden rounded-2xl border border-spark-line bg-spark-panel"
                   >
                     <span className={`absolute inset-y-0 left-0 w-1.5 ${st.bar}`} />
                     <div className="flex items-start gap-3 py-3.5 pl-5 pr-3.5">
@@ -618,18 +699,18 @@ export function AgendaScreen({
                         <div className="mt-2 flex flex-wrap items-center gap-1.5">
                           {c.status && (
                             <span
-                              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${st.chip}`}
+                              className={`rounded-sm px-2.5 py-1 text-xs font-semibold ${st.chip}`}
                             >
                               {c.status}
                             </span>
                           )}
                           {c.motivo && (
-                            <span className="rounded-full bg-spark-surface px-2.5 py-1 text-xs font-medium text-spark-body">
+                            <span className="rounded-sm bg-spark-surface px-2.5 py-1 text-xs font-medium text-spark-body">
                               {c.motivo}
                             </span>
                           )}
                           {c.tipoLaudo && (
-                            <span className="rounded-full bg-spark-surface px-2.5 py-1 text-xs font-medium text-spark-body">
+                            <span className="rounded-sm bg-spark-surface px-2.5 py-1 text-xs font-medium text-spark-body">
                               {c.tipoLaudo}
                             </span>
                           )}
@@ -645,8 +726,8 @@ export function AgendaScreen({
                         <button
                           type="button"
                           aria-label="Editar consulta"
-                          onClick={() => setForm(c)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full bg-spark-surface text-spark-body transition hover:bg-spark-hover active:scale-95"
+                          onClick={() => setForm({ modo: "editar", item: c })}
+                          className="flex h-9 w-9 items-center justify-center rounded-sm bg-spark-surface text-spark-body transition hover:bg-spark-hover active:scale-95"
                         >
                           <PencilSimple size={16} />
                         </button>
@@ -655,7 +736,7 @@ export function AgendaScreen({
                             type="button"
                             aria-label={`Buscar ${c.clienteNome}`}
                             onClick={() => onBuscarCliente(c.clienteNome)}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-spark-soft text-spark-accent-strong transition hover:brightness-95 active:scale-95"
+                            className="flex h-9 w-9 items-center justify-center rounded-sm bg-spark-soft text-spark-accent-strong transition hover:brightness-95 active:scale-95"
                           >
                             <MagnifyingGlass size={16} />
                           </button>
@@ -672,7 +753,7 @@ export function AgendaScreen({
           {proximos.length > 0 && (
             <section>
               <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.12em] text-spark-faint">
-                Proximos dias
+                Próximos dias
               </p>
               <div className="flex flex-col gap-3">
                 {proximos.map(([dia, itens]) => (
@@ -680,7 +761,7 @@ export function AgendaScreen({
                     key={dia}
                     type="button"
                     onClick={() => setSelecionado(dia)}
-                    className="group w-full rounded-2xl border border-spark-line bg-spark-panel p-3 text-left shadow-[0_10px_24px_-20px_rgba(28,25,23,0.35)] transition hover:border-spark-inputline hover:shadow-[0_14px_30px_-18px_rgba(28,25,23,0.4)] active:scale-[0.99]"
+                    className="group w-full rounded-2xl border border-spark-line bg-spark-panel p-3 text-left transition hover:border-spark-inputline active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-2.5">
                       <div className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl bg-spark-soft leading-none">
@@ -694,7 +775,7 @@ export function AgendaScreen({
                         </p>
                         <p className="text-[11px] text-spark-muted">{formatarBr(dia)}</p>
                       </div>
-                      <span className="flex items-center gap-1 rounded-full bg-spark-surface px-2.5 py-1 text-[11px] font-semibold text-spark-body">
+                      <span className="flex items-center gap-1 rounded-sm bg-spark-surface px-2.5 py-1 text-[11px] font-semibold text-spark-body">
                         {itens.length} {itens.length === 1 ? "consulta" : "consultas"}
                         <CaretRight
                           size={12}
@@ -716,7 +797,7 @@ export function AgendaScreen({
                               {c.clienteNome || "(sem nome)"}
                             </span>
                             {c.motivo && (
-                              <span className="hidden shrink-0 rounded-full bg-spark-surface px-2 py-0.5 text-[11px] text-spark-body sm:inline">
+                              <span className="hidden shrink-0 rounded-sm bg-spark-surface px-2 py-0.5 text-[11px] text-spark-body sm:inline">
                                 {c.motivo}
                               </span>
                             )}
@@ -740,8 +821,9 @@ export function AgendaScreen({
 
       {form !== null && (
         <ConsultaForm
-          dataInicial={selecionado}
-          consulta={form}
+          dataInicial={form.modo === "criar" ? form.data : selecionado}
+          horarioInicial={form.modo === "criar" ? form.horario : undefined}
+          consulta={form.modo === "editar" ? form.item : undefined}
           onFechar={() => setForm(null)}
           onSalvo={aposSalvar}
           onSessaoExpirada={onSessaoExpirada}

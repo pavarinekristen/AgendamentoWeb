@@ -30,7 +30,7 @@ export function AgendarScreen({
     <div className="px-4 py-4">
       <SectionHeader
         titulo="Agendar consulta"
-        subtitulo="Novo agendamento com bloqueio automatico de horario."
+        subtitulo="Novo agendamento com bloqueio automático de horário."
         Icone={CalendarPlus}
         onVoltar={onVoltar}
       />
@@ -45,14 +45,14 @@ export function AgendarScreen({
             <button
               type="button"
               onClick={() => setAgendado(false)}
-              className="rounded-full bg-spark-soft px-3.5 py-1.5 text-[13px] font-semibold text-spark-accent-strong"
+              className="rounded-sm bg-spark-soft px-3.5 py-1.5 text-[13px] font-semibold text-spark-accent-strong"
             >
               Agendar outra
             </button>
             <button
               type="button"
               onClick={onVerAgenda}
-              className="rounded-full bg-spark-surface px-3.5 py-1.5 text-[13px] font-semibold text-spark-body"
+              className="rounded-sm bg-spark-surface px-3.5 py-1.5 text-[13px] font-semibold text-spark-body"
             >
               Ver na agenda
             </button>
@@ -60,7 +60,7 @@ export function AgendarScreen({
         </div>
       )}
 
-      <div className="rounded-2xl border border-spark-line bg-spark-panel px-4 py-4 shadow-[0_10px_24px_-20px_rgba(28,25,23,0.35)]">
+      <div className="rounded-2xl border border-spark-line bg-spark-panel px-4 py-4">
         <ConsultaForm
           key={`${chaveForm}-${dataInicial ?? ""}`}
           inline

@@ -17,8 +17,8 @@ export function SkeletonCard() {
         </div>
       </div>
       <div className="mt-3 flex gap-2">
-        <div className="h-7 w-28 rounded-full bg-spark-surface" />
-        <div className="h-7 w-24 rounded-full bg-spark-surface" />
+        <div className="h-7 w-28 rounded-sm bg-spark-surface" />
+        <div className="h-7 w-24 rounded-sm bg-spark-surface" />
       </div>
     </li>
   );

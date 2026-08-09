@@ -41,7 +41,7 @@ export function ClienteCard({ cliente, onAtualizado, onSessaoExpirada }: Props) 
     try {
       setDetalhe(await detalharCliente(cliente.idLocal));
     } catch {
-      setErroDetalhe("Nao foi possivel carregar os detalhes.");
+      setErroDetalhe("Não foi possível carregar os detalhes.");
     } finally {
       setCarregandoDetalhe(false);
     }
@@ -79,7 +79,7 @@ export function ClienteCard({ cliente, onAtualizado, onSessaoExpirada }: Props) 
   const inicial = (cliente.nome ?? "?").trim().charAt(0).toUpperCase() || "?";
 
   return (
-    <li className="overflow-hidden rounded-2xl border border-spark-line bg-spark-panel shadow-[0_10px_24px_-20px_rgba(28,25,23,0.35)]">
+    <li className="overflow-hidden rounded-2xl border border-spark-line bg-spark-panel">
       <button
         type="button"
         onClick={toggle}
@@ -108,7 +108,7 @@ export function ClienteCard({ cliente, onAtualizado, onSessaoExpirada }: Props) 
           <a
             href={`tel:${telefoneDigitos}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 rounded-full bg-spark-soft px-3 py-1.5 text-sm font-semibold text-spark-accent-strong transition active:scale-[0.97]"
+            className="flex items-center gap-1.5 rounded-sm bg-spark-soft px-3 py-1.5 text-sm font-semibold text-spark-accent-strong transition active:scale-[0.97]"
           >
             <Phone size={15} weight="fill" />
             {cliente.telefone}
@@ -120,19 +120,19 @@ export function ClienteCard({ cliente, onAtualizado, onSessaoExpirada }: Props) 
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 rounded-full bg-spark-success/10 px-3 py-1.5 text-sm font-semibold text-spark-success transition active:scale-[0.97]"
+            className="flex items-center gap-1.5 rounded-sm bg-spark-success/10 px-3 py-1.5 text-sm font-semibold text-spark-success transition active:scale-[0.97]"
           >
             <WhatsappLogo size={15} weight="fill" />
             WhatsApp
           </a>
         )}
         {cliente.cpf && (
-          <span className="rounded-full bg-spark-surface px-3 py-1.5 text-sm text-spark-body">
+          <span className="rounded-sm bg-spark-surface px-3 py-1.5 text-sm text-spark-body">
             CPF {cliente.cpf}
           </span>
         )}
         {cliente.idCadastro && (
-          <span className="rounded-full bg-spark-surface px-3 py-1.5 text-sm text-spark-body">
+          <span className="rounded-sm bg-spark-surface px-3 py-1.5 text-sm text-spark-body">
             ID {cliente.idCadastro}
           </span>
         )}
@@ -153,8 +153,8 @@ export function ClienteCard({ cliente, onAtualizado, onSessaoExpirada }: Props) 
               <Linha rotulo="E-mail" valor={detalhe.email} />
               <Linha rotulo="RG" valor={detalhe.rg} />
               <Linha rotulo="Estado civil" valor={detalhe.estadoCivil} />
-              <Linha rotulo="Endereco" valor={detalhe.endereco} />
-              <Linha rotulo="Observacoes" valor={detalhe.observacoes} />
+              <Linha rotulo="Endereço" valor={detalhe.endereco} />
+              <Linha rotulo="Observações" valor={detalhe.observacoes} />
 
               <div className="mt-3 flex gap-2">
                 <button

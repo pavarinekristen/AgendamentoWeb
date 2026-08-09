@@ -4,6 +4,7 @@ import { listarAgenda, baixarLaudo, listarEmpresas, ApiError, type AgendaItem, t
 import { formatarBr, hojeIso, paraIso } from "../lib/datas";
 import { LaudoViewer } from "../components/LaudoViewer";
 import { SectionHeader } from "../components/SectionHeader";
+import { useToast } from "../components/Toast";
 import { SkeletonList } from "../components/Skeleton";
 
 // Secao de Laudos com paridade com o desktop (LaudosView): filtros por
@@ -28,7 +29,7 @@ function SeletorResultado({
   const opcoes: { valor: ResultadoLaudo; rotulo: string }[] = comArma
     ? [
         { valor: "apto_arma", rotulo: "APTO ao manuseio de arma de fogo" },
-        { valor: "apto_arma_profissao", rotulo: "APTO a arma e ao exercicio da profissao" },
+        { valor: "apto_arma_profissao", rotulo: "APTO à arma e ao exercício da profissão" },
         { valor: "inapto", rotulo: "INAPTO" },
       ]
     : [
@@ -87,7 +88,7 @@ function SeletorResultado({
           <button
             type="button"
             onClick={() => onConfirmar(sel)}
-            className="h-12 flex-[2] rounded-xl bg-gradient-to-br from-[#E87916] to-spark-accent text-[15px] font-semibold text-white shadow-[0_8px_18px_-8px_rgba(224,103,10,0.8)] transition active:scale-[0.98]"
+            className="h-12 flex-[2] rounded-xl bg-spark-accent hover:bg-spark-accent-strong text-[15px] font-semibold text-white transition active:scale-[0.98]"
           >
             Gerar laudo
           </button>
@@ -105,7 +106,7 @@ interface Props {
 
 const inputCls =
   "h-11 w-full rounded-xl border border-spark-inputline bg-spark-field px-3 text-[14px] text-spark-ink outline-none transition placeholder:text-spark-faint focus:border-spark-accent focus:ring-2 focus:ring-spark-accent/20";
-const labelCls = "mb-1 block text-[12px] font-semibold text-[#44403C]";
+const labelCls = "mb-1 block text-[12px] font-semibold text-spark-label";
 
 function primeiroDiaDoMes(): string {
   const d = new Date();
@@ -134,14 +135,15 @@ export function LaudosScreen({ onSessaoExpirada, onVoltar, refreshSeq = 0 }: Pro
   const [viewer, setViewer] = useState<{ blob: Blob | null; nomeArquivo: string; titulo: string } | null>(null);
   const [empresas, setEmpresas] = useState<string[]>([]);
   const [escolhendo, setEscolhendo] = useState<AgendaItem | null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     listarEmpresas().then(setEmpresas).catch(() => {});
   }, []);
 
   const buscar = useCallback(async () => {
-    if (!de || !ate) return setErro("Informe o periodo.");
-    if (de > ate) return setErro("A data inicial nao pode ser maior que a final.");
+    if (!de || !ate) return setErro("Informe o período.");
+    if (de > ate) return setErro("A data inicial não pode ser maior que a final.");
 
     setCarregando(true);
     setErro("");
@@ -209,14 +211,23 @@ export function LaudosScreen({ onSessaoExpirada, onVoltar, refreshSeq = 0 }: Pro
       }
       // Detalhe tecnico fica no console; a diretoria ve uma mensagem tranquila.
       console.error("Falha ao baixar o laudo:", err);
+
+      // Toast, e nao setErro: a mensagem de erro da tela fica no topo, dentro do
+      // card de filtros. Com a lista rolada, o usuario clicava num laudo la
+      // embaixo e a falha aparecia fora do campo de visao — parecia que o botao
+      // simplesmente nao fazia nada. O toast e fixo na base, sempre visivel.
       if (err instanceof ApiError && err.status === 0) {
-        setErro(err.message); // "Sem conexao com a API..." — ja e amigavel
+        toast.erro(err.message); // "Sem conexao com a API..." — ja e amigavel
       } else if (err instanceof ApiError && (err.status === 409 || err.status >= 500)) {
-        setErro(
-          "Laudo temporariamente indisponivel. Tente de novo em instantes; se persistir, avise o suporte.",
+        toast.erro(
+          "Laudo temporariamente indisponível. Tente de novo em instantes; se persistir, avise o suporte.",
         );
       } else {
-        setErro("Nao foi possivel abrir o laudo. Tente novamente.");
+        toast.erro(
+          err instanceof ApiError
+            ? `Não foi possível abrir o laudo (${err.status}). Tente novamente.`
+            : "Não foi possível abrir o laudo. Tente novamente.",
+        );
       }
     } finally {
       setBaixando(null);
@@ -227,13 +238,13 @@ export function LaudosScreen({ onSessaoExpirada, onVoltar, refreshSeq = 0 }: Pro
     <div className="px-4 py-4">
       <SectionHeader
         titulo="Laudos"
-        subtitulo="Historico de agendamentos e o laudo oficial (com/sem arma)."
+        subtitulo="Histórico de agendamentos e o laudo oficial (com/sem arma)."
         Icone={FileText}
         onVoltar={onVoltar}
       />
 
       {/* Filtros */}
-      <div className="rounded-2xl border border-spark-line bg-spark-panel p-4 shadow-[0_10px_24px_-20px_rgba(28,25,23,0.35)]">
+      <div className="rounded-2xl border border-spark-line bg-spark-panel p-4">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <label className="block">
             <span className={labelCls}>De</span>
@@ -259,7 +270,7 @@ export function LaudosScreen({ onSessaoExpirada, onVoltar, refreshSeq = 0 }: Pro
             </datalist>
           </label>
           <label className="block">
-            <span className={labelCls}>Funcionario</span>
+            <span className={labelCls}>Funcionário</span>
             <input
               className={inputCls}
               value={funcionario}
@@ -281,7 +292,7 @@ export function LaudosScreen({ onSessaoExpirada, onVoltar, refreshSeq = 0 }: Pro
             type="button"
             onClick={buscar}
             disabled={carregando}
-            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E87916] to-spark-accent text-[15px] font-semibold text-white shadow-[0_8px_18px_-8px_rgba(224,103,10,0.8)] transition active:scale-[0.98] disabled:opacity-60 lg:flex-none lg:w-56"
+            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-spark-accent hover:bg-spark-accent-strong text-[15px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-60 lg:flex-none lg:w-56"
           >
             {carregando && <CircleNotch size={18} className="animate-spin" />}
             {carregando ? "Carregando..." : "Filtrar"}
@@ -321,7 +332,7 @@ export function LaudosScreen({ onSessaoExpirada, onVoltar, refreshSeq = 0 }: Pro
 
         {buscou && filtrados.length === 0 && !carregando && (
           <div className="rounded-2xl border border-dashed border-spark-inputline bg-spark-surface/60 px-4 py-8 text-center">
-            <p className="text-sm text-spark-muted">Nenhum agendamento no periodo/filtros.</p>
+            <p className="text-sm text-spark-muted">Nenhum agendamento no período/filtros.</p>
           </div>
         )}
 
@@ -329,7 +340,7 @@ export function LaudosScreen({ onSessaoExpirada, onVoltar, refreshSeq = 0 }: Pro
           {filtrados.map((c) => (
             <li
               key={c.idLocal}
-              className="rounded-2xl border border-spark-line bg-spark-panel px-4 py-3.5 shadow-[0_10px_24px_-20px_rgba(28,25,23,0.35)]"
+              className="rounded-2xl border border-spark-line bg-spark-panel px-4 py-3.5"
             >
               <div className="flex items-start gap-3">
                 <div className="min-w-0 flex-1">
@@ -346,12 +357,12 @@ export function LaudosScreen({ onSessaoExpirada, onVoltar, refreshSeq = 0 }: Pro
                   )}
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     {c.motivo && (
-                      <span className="rounded-full bg-spark-surface px-2.5 py-1 text-xs font-medium text-spark-body">
+                      <span className="rounded-sm bg-spark-surface px-2.5 py-1 text-xs font-medium text-spark-body">
                         {c.motivo}
                       </span>
                     )}
                     <span
-                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                      className={`flex items-center gap-1 rounded-sm px-2.5 py-1 text-xs font-semibold ${
                         c.tipoLaudo === "Com arma"
                           ? "bg-spark-danger/10 text-spark-danger"
                           : "bg-spark-soft text-spark-accent-strong"
@@ -362,7 +373,7 @@ export function LaudosScreen({ onSessaoExpirada, onVoltar, refreshSeq = 0 }: Pro
                     </span>
                     {c.status && (
                       <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        className={`rounded-sm px-2.5 py-1 text-xs font-semibold ${
                           c.status === "Baixado"
                             ? "bg-spark-success/10 text-spark-success"
                             : "bg-spark-surface text-spark-body"

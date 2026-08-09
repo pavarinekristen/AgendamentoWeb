@@ -1,7 +1,7 @@
 {
-  "name": "SparkCore Mobile",
+  "name": "SparkCore-Agendamentos",
   "short_name": "SparkCore",
-  "description": "Busca rapida de clientes, agenda e avisos da diretoria",
+  "description": "Busca rápida de clientes, agenda e avisos da diretoria",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

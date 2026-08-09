@@ -65,6 +65,7 @@ export interface HistoricoItem {
 
 export interface ClienteDetalhe extends ClienteResumo {
   dataNascimento?: string; // "yyyy-MM-dd 00:00:00" ou vazio
+  dataCadastro?: string; // criado_em: "yyyy-MM-ddTHH:mm:ss" ou vazio
   escolaridade?: string;
   estadoCivil?: string;
   naturalidade?: string;
@@ -165,7 +166,7 @@ export async function login2fa(email: string, codigo: string): Promise<AuthRespo
   );
 
   if (!auth?.token) {
-    throw new ApiError(auth?.mensagem ?? "Codigo de verificacao invalido.", 401);
+    throw new ApiError(auth?.mensagem ?? "Código de verificação inválido.", 401);
   }
 
   return auth;
@@ -256,7 +257,7 @@ export async function loginPasskey(email?: string): Promise<AuthResponse> {
     false,
   );
   if (!auth?.token) {
-    throw new ApiError(auth?.mensagem ?? "Nao foi possivel entrar com a passkey.", 401);
+    throw new ApiError(auth?.mensagem ?? "Não foi possível entrar com a passkey.", 401);
   }
   return auth;
 }
@@ -406,6 +407,7 @@ export interface ClientePayload {
   cpf: string;
   rg: string;
   dataNascimento: string; // yyyy-MM-dd ou ""
+  dataCadastro: string; // yyyy-MM-dd ou "" (vazio = hoje / preserva na edicao)
   sexo: string;
   telefone: string;
   email: string;
@@ -565,7 +567,7 @@ export async function baixarLaudo(
   } catch (err) {
     const detalhe = err instanceof Error && err.message ? ` (${err.message})` : "";
     throw new ApiError(
-      `Nao foi possivel chamar a API para gerar o laudo${detalhe}. Feche e abra o app novamente se estiver usando o atalho instalado.`,
+      `Não foi possível chamar a API para gerar o laudo${detalhe}. Feche e abra o app novamente se estiver usando o atalho instalado.`,
       0,
     );
   }

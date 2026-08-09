@@ -22,6 +22,9 @@
   --color-spark-selected: #fdeede;
   --color-spark-danger: #b23f2f;
   --color-spark-success: #1f8a4c;
+  /* Rotulo de campo de formulario: era um #44403C cravado no JSX de 7 lugares,
+     a unica cor do app fora dos tokens. Fica entre o "text" e o "body". */
+  --color-spark-label: #44403c;
 
   /* Cores dedicadas de status para os graficos (validadas p/ daltonismo
      via scripts/validate_palette.js da skill dataviz). */
@@ -30,20 +33,41 @@
   --color-spark-chart-amber: #d98324;
   --color-spark-chart-neutral: #b3aca4;
 
-  /* Hierarquia tipografica premium:
-     Plus Jakarta Sans (display) para titulos — moderna e com autoridade.
-     Inter (body/dados) para textos e tabelas — legibilidade alta em telas.
+  /* Hierarquia tipografica:
+     Source Serif 4 (display) nos titulos e numeros grandes — serifa combina com
+     a metafora de papel + tinta do SparkCore e da ar de documento, nao de
+     painel de SaaS. Plus Jakarta Sans saiu por ser generica demais.
+     Inter (body/dados) fica: a interface e dominada por texto de 10 a 13px, e
+     Inter foi desenhada exatamente para esse tamanho (altura de x grande,
+     aberturas abertas). Trocar o corpo custaria legibilidade onde mais importa.
      tabular-nums nos numeros de dashboard para colunas alinhadas. */
   --font-sans:
     "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display:
-    "Plus Jakarta Sans Variable", "Plus Jakarta Sans", "Inter Variable", system-ui, sans-serif;
+    "Source Serif 4 Variable", "Source Serif 4", Georgia, "Times New Roman", serif;
+
+  /* Raio editorial: a metafora do SparkCore e papel + tinta, e papel tem canto
+     reto. Raios grandes e uniformes (16px em tudo) davam aspecto de template
+     generico. Aqui o canto so suaviza o corte, nao arredonda a forma.
+     Circulo continua existindo, mas so onde ele significa algo: avatar,
+     ponto de status, contador. Ver rounded-full nos componentes. */
+  --radius-xs: 1px;
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 3px;
+  --radius-2xl: 4px;
+  --radius-3xl: 6px;
 }
 
-/* Titulos usam a fonte display por padrao. */
-h1, h2, h3, h4, .font-display {
+/* Serifa so onde ela ajuda: titulo grande e numero de destaque.
+   h3/h4 ficaram de fora de proposito — no app eles sao rotulos de secao de
+   13-14px ("Acoes Rapidas", "Consultas hoje"), e serifa nesse tamanho perde
+   para a Inter. Quem quiser a display num elemento pede pela classe.
+   Sem letter-spacing negativo: o -0.02em servia a uma sans geometrica; serifa
+   ja vem com o espacamento certo do proprio desenho. */
+h1, h2, .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
 }
 
 /* Numeros de metrica: tabular para nao "dancar" ao atualizar. */
@@ -122,8 +146,15 @@ input[type="search"]::-webkit-search-cancel-button {
   }
 }
 
+/* "backwards" e nao "both", de proposito.
+   Com "both" o elemento RETEM o ultimo keyframe para sempre, e o ultimo
+   keyframe tem transform. Transform diferente de none faz do elemento o bloco
+   de contencao dos descendentes position:fixed — os modais da aba passavam a
+   se posicionar pela altura da lista, nao pela janela, e sumiam da tela (so o
+   backdrop aparecia). "backwards" preenche antes da animacao (sem flash de
+   entrada) e libera o transform ao terminar. */
 .tab-anim {
-  animation: tab-in 0.22s ease both;
+  animation: tab-in 0.22s ease backwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -145,7 +176,7 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .toast-in {
-  animation: toast-in 0.2s ease both;
+  animation: toast-in 0.2s ease backwards;
 }
 
 /* Command palette (Cmd/Ctrl+K): leve entrada de cima. */
@@ -161,7 +192,7 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .cmdk-in {
-  animation: cmdk-in 0.16s ease both;
+  animation: cmdk-in 0.16s ease backwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -177,12 +208,21 @@ input[type="search"]::-webkit-search-cancel-button {
    agenda wireframe girando em perspective, sem depender de Three.js.
 --------------------------------------------------------------------------- */
 
+/* O grao (feTurbulence em SVG, embutido como data URI) e a primeira camada de
+   fundo, portanto a de cima. Existe por um motivo tecnico, nao decorativo:
+   gradiente escuro liso em tela grande mostra faixas de banda (color banding),
+   porque 8 bits por canal nao dao passos suficientes entre #191310 e #30220f.
+   O ruido quebra a faixa e ainda da sensacao de material em vez de plastico.
+   Vale ~1 kB e nenhuma requisicao. */
 .holo-panel {
   position: relative;
   overflow: hidden;
   background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.38'/%3E%3C/svg%3E"),
     radial-gradient(130% 78% at 50% 33%, rgba(247, 147, 30, 0.16), transparent 56%),
     linear-gradient(160deg, #191310 0%, #241a12 55%, #30220f 100%);
+  background-size: 160px 160px, cover, cover;
+  background-repeat: repeat, no-repeat, no-repeat;
 }
 
 /* Chao do palco: grade em perspectiva que recua e some ao fundo. */
@@ -198,17 +238,26 @@ input[type="search"]::-webkit-search-cancel-button {
   background:
     repeating-linear-gradient(0deg, rgba(247, 147, 30, 0.11) 0 1px, transparent 1px 34px),
     repeating-linear-gradient(90deg, rgba(247, 147, 30, 0.08) 0 1px, transparent 1px 34px);
-  -webkit-mask-image: linear-gradient(to top, #000 6%, transparent 80%);
-  mask-image: linear-gradient(to top, #000 6%, transparent 80%);
+  /* Perspectiva atmosferica: a grade some mais cedo ao fundo (62% em vez de
+     80%) e leva um desfoque de meio pixel. O olho le distancia quando o que
+     esta longe perde contraste e nitidez — o mesmo motivo de a serra no
+     horizonte parecer azulada. */
+  -webkit-mask-image: linear-gradient(to top, #000 4%, transparent 62%);
+  mask-image: linear-gradient(to top, #000 4%, transparent 62%);
+  filter: blur(0.4px);
   pointer-events: none;
 }
 
-/* Vinheta suave para focar o centro do palco. */
+/* Vinheta: fecha mais que antes (comeca em 46% e chega a 0.62) para o centro
+   do palco ganhar peso, com um escurecimento extra vindo de baixo que assenta
+   o chao e evita que a base pareca flutuar. */
 .holo-panel::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(125% 92% at 50% 40%, transparent 54%, rgba(0, 0, 0, 0.5) 100%);
+  background:
+    radial-gradient(120% 88% at 50% 38%, transparent 46%, rgba(0, 0, 0, 0.62) 100%),
+    linear-gradient(to top, rgba(0, 0, 0, 0.35) 0%, transparent 28%);
   pointer-events: none;
 }
 
@@ -422,11 +471,11 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .login-card {
-  animation: sc-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: sc-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 .login-panel-content {
-  animation: sc-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: sc-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

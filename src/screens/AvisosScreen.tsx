@@ -50,7 +50,7 @@ export function AvisosScreen({ itens, onSessaoExpirada, onBuscarCliente, compact
       }
       const numero = numeroWhatsapp(telefone);
       if (!numero) {
-        alert("Este cliente nao tem telefone cadastrado.");
+        alert("Este cliente não tem telefone cadastrado.");
         return;
       }
       const texto =
@@ -63,7 +63,7 @@ export function AvisosScreen({ itens, onSessaoExpirada, onBuscarCliente, compact
         onSessaoExpirada();
         return;
       }
-      alert("Nao foi possivel carregar o telefone do cliente.");
+      alert("Não foi possível carregar o telefone do cliente.");
     } finally {
       setWaCarregando("");
     }
@@ -71,7 +71,7 @@ export function AvisosScreen({ itens, onSessaoExpirada, onBuscarCliente, compact
 
   function Card({ v }: { v: VencimentoItem }) {
     return (
-      <li className="rounded-2xl border border-spark-line bg-spark-panel px-4 py-3.5 shadow-[0_10px_24px_-20px_rgba(28,25,23,0.35)]">
+      <li className="rounded-2xl border border-spark-line bg-spark-panel px-4 py-3.5">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-semibold text-spark-ink">{v.clienteNome}</p>
@@ -84,7 +84,7 @@ export function AvisosScreen({ itens, onSessaoExpirada, onBuscarCliente, compact
             </p>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-2">
-            <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${corDoPrazo(v.diasRestantes)}`}>
+            <span className={`rounded-sm px-2.5 py-1 text-xs font-bold ${corDoPrazo(v.diasRestantes)}`}>
               {v.diasRestantes}d
             </span>
             <div className="flex items-center gap-1.5">
@@ -93,7 +93,7 @@ export function AvisosScreen({ itens, onSessaoExpirada, onBuscarCliente, compact
                 aria-label={`Chamar ${v.clienteNome} no WhatsApp`}
                 disabled={Boolean(waCarregando)}
                 onClick={() => abrirWhatsapp(v)}
-                className={`flex h-9 w-9 items-center justify-center rounded-full bg-spark-success/10 text-spark-success transition active:scale-95 ${
+                className={`flex h-9 w-9 items-center justify-center rounded-sm bg-spark-success/10 text-spark-success transition active:scale-95 ${
                   waCarregando === v.clienteIdLocal ? "animate-pulse" : ""
                 }`}
               >
@@ -103,7 +103,7 @@ export function AvisosScreen({ itens, onSessaoExpirada, onBuscarCliente, compact
                 type="button"
                 aria-label={`Buscar ${v.clienteNome}`}
                 onClick={() => onBuscarCliente(v.clienteNome)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-spark-soft text-spark-accent-strong transition active:scale-95"
+                className="flex h-9 w-9 items-center justify-center rounded-sm bg-spark-soft text-spark-accent-strong transition active:scale-95"
               >
                 <MagnifyingGlass size={16} />
               </button>

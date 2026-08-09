@@ -28,7 +28,7 @@ export function GerenciarPasskeys({ onFechar }: Props) {
       setItens(await listarPasskeys());
     } catch (err) {
       setItens([]);
-      setErro(err instanceof ApiError ? err.message : "Nao foi possivel carregar os dispositivos.");
+      setErro(err instanceof ApiError ? err.message : "Não foi possível carregar os dispositivos.");
     }
   }
 
@@ -49,7 +49,7 @@ export function GerenciarPasskeys({ onFechar }: Props) {
       if (err instanceof DOMException && (err.name === "NotAllowedError" || err.name === "AbortError")) {
         return; // cancelou o Windows Hello / biometria
       }
-      setErro(err instanceof ApiError ? err.message : "Nao foi possivel cadastrar esta passkey.");
+      setErro(err instanceof ApiError ? err.message : "Não foi possível cadastrar esta passkey.");
     } finally {
       setCadastrando(false);
     }
@@ -61,7 +61,7 @@ export function GerenciarPasskeys({ onFechar }: Props) {
       await revogarPasskey(id);
       await carregar();
     } catch (err) {
-      setErro(err instanceof ApiError ? err.message : "Nao foi possivel remover o dispositivo.");
+      setErro(err instanceof ApiError ? err.message : "Não foi possível remover o dispositivo.");
     }
   }
 
@@ -162,7 +162,7 @@ export function GerenciarPasskeys({ onFechar }: Props) {
                 type="button"
                 onClick={handleCadastrar}
                 disabled={cadastrando}
-                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E87916] to-spark-accent text-sm font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-spark-accent hover:bg-spark-accent-strong text-sm font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
               >
                 {cadastrando && <CircleNotch size={18} className="animate-spin" />}
                 {cadastrando ? "Confirme..." : "Cadastrar"}

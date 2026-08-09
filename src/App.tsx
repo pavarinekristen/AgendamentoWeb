@@ -29,7 +29,7 @@ import { CommandPalette } from "./components/CommandPalette";
 // no desktop (lg+) e um sistema com menu lateral recolhivel, como o WPF.
 
 const TITULOS: Record<Aba, string> = {
-  inicio: "Inicio",
+  inicio: "Início",
   busca: "Pesquisa de clientes",
   agenda: "Agenda",
   agendar: "Agendar consulta",
@@ -168,7 +168,7 @@ export default function App() {
       tipo: "consulta",
       titulo: c.clienteNome || "Consulta agendada",
       descricao: [c.motivo, c.local].filter(Boolean).join(" · ") || "Consulta de hoje",
-      quando: c.horario ? `Hoje as ${c.horario}` : "Hoje",
+      quando: c.horario ? `Hoje às ${c.horario}` : "Hoje",
       onAbrir: c.clienteNome ? () => buscarCliente(c.clienteNome) : undefined,
     }));
     const aVencer: Notificacao[] = vencimentos
@@ -178,12 +178,12 @@ export default function App() {
         id: `venc-${v.clienteIdLocal}-${v.vencimentoEm}`,
         tipo: "vencimento",
         titulo: v.clienteNome,
-        descricao: `Periodico ${v.empresa ? `· ${v.empresa}` : ""}`.trim(),
+        descricao: `Periódico ${v.empresa ? `· ${v.empresa}` : ""}`.trim(),
         quando:
           v.diasRestantes <= 0
             ? "Vencido"
             : v.diasRestantes === 1
-              ? "Vence amanha"
+              ? "Vence amanhã"
               : `Vence em ${v.diasRestantes} dias`,
         onAbrir: () => buscarCliente(v.clienteNome),
       }));
@@ -228,14 +228,18 @@ export default function App() {
         <InicioScreen
           onSessaoExpirada={sair}
           onNovaConsulta={() => abrirAgendar(hojeIso())}
-          onNovoCliente={() => mudarAba("cadastro")}
-          onBuscarCliente={() => mudarAba("busca")}
+          onBuscarCliente={buscarCliente}
           onAbrirAgenda={() => mudarAba("agenda")}
+          onAbrirAvisos={() => mudarAba("resumo")}
+          // Reaproveita os vencimentos que o App ja busca para o sino.
+          vencimentos={vencimentos}
           refreshSeq={agendaRefreshSeq}
         />
       </div>
       <div className={aba === "busca" ? "tab-anim" : "hidden"}>
-        <SpotlightScreen onLogout={sair} termoExterno={buscaExterna} />
+        {/* ativa: a aba fica montada mesmo escondida (so troca de classe), entao
+            a tela precisa saber quando virou a visivel para focar a busca. */}
+        <SpotlightScreen onLogout={sair} termoExterno={buscaExterna} ativa={aba === "busca"} />
       </div>
       <div className={aba === "agenda" ? "tab-anim" : "hidden"}>
         <AgendaScreen
@@ -275,13 +279,14 @@ export default function App() {
     <div className="flex h-dvh overflow-hidden bg-spark-page">
       {/* ── Menu lateral recolhivel (so desktop) ─────────────────── */}
       <aside
-        className={`hidden flex-none flex-col border-r border-spark-line bg-gradient-to-b from-spark-panel to-spark-surface shadow-[1px_0_0_rgba(28,25,23,0.02)] transition-[width] duration-300 ease-out lg:flex ${
-          menuRecolhido ? "w-[76px]" : "w-64"
+        className={`hidden flex-none flex-col border-r border-spark-line bg-spark-panel transition-[width] duration-300 ease-out lg:flex ${
+          menuRecolhido ? "w-[84px]" : "w-72"
         }`}
       >
+        {/* Marca em cima, botao de recolher logo abaixo dela (Desktop-4). */}
         <div
-          className={`flex items-center pb-3 pt-4 ${
-            menuRecolhido ? "flex-col gap-3 px-0" : "justify-between px-4"
+          className={`flex flex-col pb-5 pt-6 ${
+            menuRecolhido ? "items-center gap-4 px-0" : "items-start gap-4 px-5"
           }`}
         >
           <div className={`flex items-center gap-2.5 ${menuRecolhido ? "" : "min-w-0"}`}>
@@ -306,17 +311,17 @@ export default function App() {
             onClick={alternarMenu}
             aria-label={menuRecolhido ? "Abrir menu" : "Recolher menu"}
             title={menuRecolhido ? "Abrir menu" : "Recolher menu"}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-spark-muted transition hover:bg-spark-hover hover:text-spark-body"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-spark-muted transition hover:bg-spark-hover hover:text-spark-body"
           >
-            <List size={20} weight="bold" />
+            <List size={22} />
           </button>
         </div>
 
         <nav
-          className={`flex flex-1 flex-col gap-1 ${menuRecolhido ? "items-center px-2.5" : "px-3"}`}
+          className={`flex flex-1 flex-col gap-1.5 ${menuRecolhido ? "items-center px-3" : "px-4"}`}
         >
           {!menuRecolhido && (
-            <p className="px-2.5 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-spark-faint">
+            <p className="px-2.5 pb-2 pt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-spark-faint">
               Navegacao
             </p>
           )}
@@ -330,15 +335,15 @@ export default function App() {
                 aria-current={ativo ? "page" : undefined}
                 title={rotulo}
                 className={`group relative flex items-center rounded-xl text-left text-[13.5px] font-semibold transition-all duration-200 ${
-                  menuRecolhido ? "h-11 w-11 justify-center" : "w-full gap-3 px-3 py-2.5"
+                  menuRecolhido ? "h-12 w-12 justify-center" : "w-full gap-3.5 px-3.5 py-3"
                 } ${
                   ativo
-                    ? "bg-spark-soft text-spark-accent-strong shadow-[0_1px_2px_rgba(194,90,8,0.08)]"
+                    ? "bg-spark-soft text-spark-accent-strong"
                     : "text-spark-body hover:bg-spark-hover hover:text-spark-text"
                 } ${ativo && menuRecolhido ? "ring-1 ring-spark-accent/20" : ""}`}
               >
                 {ativo && !menuRecolhido && (
-                  <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-spark-accent" />
+                  <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 bg-spark-accent" />
                 )}
                 <Icone
                   size={19}
@@ -362,15 +367,15 @@ export default function App() {
           })}
         </nav>
 
-        <div className={`border-t border-spark-line py-3 ${menuRecolhido ? "px-2.5" : "px-3"}`}>
+        <div className={`border-t border-spark-line py-5 ${menuRecolhido ? "px-3" : "px-4"}`}>
           {!menuRecolhido && (
-            <div className="mb-1.5 flex items-center gap-2.5 rounded-xl bg-spark-surface px-2.5 py-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-spark-accent to-spark-accent-light text-sm font-bold text-white shadow-sm">
+            <div className="mb-2.5 flex items-center gap-3 rounded-xl bg-spark-surface px-3 py-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-spark-accent text-sm font-bold text-white">
                 {(primeiroNome || "U").charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-semibold text-spark-text">
-                  {primeiroNome || "Usuario"}
+                  {primeiroNome || "Usuário"}
                 </p>
                 <p className="truncate text-[11px] text-spark-muted">Conectado</p>
               </div>
@@ -381,7 +386,7 @@ export default function App() {
             onClick={sair}
             title="Sair"
             className={`group flex items-center rounded-xl text-left text-[13.5px] font-semibold text-spark-body transition-all duration-200 hover:bg-spark-danger/10 hover:text-spark-danger ${
-              menuRecolhido ? "mx-auto h-11 w-11 justify-center" : "w-full gap-3 px-3 py-2.5"
+              menuRecolhido ? "mx-auto h-12 w-12 justify-center" : "w-full gap-3.5 px-3.5 py-3"
             }`}
           >
             <SignOut
@@ -396,9 +401,9 @@ export default function App() {
       {/* ── Coluna principal ──────────────────────────────────────── */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Topbar desktop: titulo da secao + sino + usuario */}
-        <header className="hidden flex-none items-center justify-between border-b border-spark-line bg-spark-panel px-6 py-3 lg:flex">
-          <h1 className="font-display text-[17px] font-bold text-spark-ink">{TITULOS[aba]}</h1>
-          <div className="flex items-center gap-1.5">
+        <header className="hidden flex-none items-center justify-between border-b border-spark-line bg-spark-panel px-10 py-5 lg:flex">
+          <h1 className="font-display text-[18px] font-bold text-spark-ink">{TITULOS[aba]}</h1>
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setPaletteAberto(true)}
@@ -423,7 +428,7 @@ export default function App() {
             )}
             <NotificationBell itens={notificacoes} />
             <div className="ml-1.5 flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-spark-accent to-spark-accent-light text-sm font-bold text-white shadow-sm">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-spark-accent text-sm font-bold text-white">
                 {(primeiroNome || "U").charAt(0).toUpperCase()}
               </div>
               <p className="text-[13px] font-medium text-spark-body">
@@ -469,7 +474,7 @@ export default function App() {
 
         {/* So o miolo rola; abas ficam montadas para preservar busca e caches. */}
         <main className="app-scroll flex-1">
-          <div className="mx-auto w-full max-w-md lg:max-w-4xl lg:px-6 lg:py-2">{conteudo}</div>
+          <div className="mx-auto w-full max-w-md lg:max-w-6xl lg:px-10 lg:py-8">{conteudo}</div>
         </main>
 
         {/* Rodape fixo: no desktop encosta na base; no mobile fica logo acima

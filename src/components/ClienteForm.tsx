@@ -33,6 +33,14 @@ function opcaoValida(valor: string | undefined, opcoes: string[], padrao: string
   return opcoes.find((o) => o.toLowerCase() === v.toLowerCase()) ?? padrao;
 }
 
+// yyyy-MM-dd do fuso do aparelho (toISOString daria UTC: vira "amanha" a noite).
+function hoje(): string {
+  const d = new Date();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mes}-${dia}`;
+}
+
 function mascaraCpf(v: string): string {
   const d = v.replace(/\D/g, "").slice(0, 11);
   return d
@@ -60,7 +68,7 @@ function cpfValido(cpf: string): boolean {
 
 const inputCls =
   "h-12 w-full rounded-xl border border-spark-inputline bg-spark-field px-3.5 text-[15px] text-spark-ink outline-none transition placeholder:text-spark-faint focus:border-spark-accent focus:ring-2 focus:ring-spark-accent/20";
-const labelCls = "mb-1.5 block text-[12.5px] font-semibold text-[#44403C]";
+const labelCls = "mb-1.5 block text-[12.5px] font-semibold text-spark-label";
 
 export function ClienteForm({ cliente, inline = false, onFechar, onSalvo, onSessaoExpirada }: Props) {
   const editando = Boolean(cliente?.idLocal);
@@ -73,6 +81,9 @@ export function ClienteForm({ cliente, inline = false, onFechar, onSalvo, onSess
     rg: cliente?.rg ?? "",
     // A API devolve "yyyy-MM-dd 00:00:00"; o input date quer so os 10 primeiros.
     dataNascimento: (cliente?.dataNascimento ?? "").slice(0, 10),
+    // Data do cadastro (criado_em): novo cliente ja vem com hoje, edicao com a
+    // data gravada — em ambos os casos da pra corrigir/retroagir.
+    dataCadastro: (cliente?.dataCadastro ?? "").slice(0, 10) || hoje(),
     sexo: opcaoValida(cliente?.sexo, SEXOS, ""),
     telefone: mascaraTelefone(cliente?.telefone ?? ""),
     email: cliente?.email ?? "",
@@ -103,14 +114,16 @@ export function ClienteForm({ cliente, inline = false, onFechar, onSalvo, onSess
     e.preventDefault();
     setErro("");
 
-    if (!f.nome.trim()) return setErro("Nome e obrigatorio.");
-    if (!f.empresa.trim()) return setErro("Empresa e obrigatoria.");
-    if (!f.cargo.trim()) return setErro("Cargo e obrigatorio.");
-    if (f.cpf && !cpfValido(f.cpf)) return setErro("CPF invalido.");
+    if (!f.nome.trim()) return setErro("Nome e obrigatório.");
+    if (!f.empresa.trim()) return setErro("Empresa é obrigatória.");
+    if (!f.cargo.trim()) return setErro("Cargo e obrigatório.");
+    if (f.cpf && !cpfValido(f.cpf)) return setErro("CPF inválido.");
     const telDigitos = f.telefone.replace(/\D/g, "");
-    if (telDigitos && telDigitos.length < 10) return setErro("Telefone deve ter 10 ou 11 digitos (com DDD).");
-    if (f.dataNascimento && f.dataNascimento > new Date().toISOString().slice(0, 10))
-      return setErro("Data de nascimento nao pode ser futura.");
+    if (telDigitos && telDigitos.length < 10) return setErro("Telefone deve ter 10 ou 11 dígitos (com DDD).");
+    if (f.dataNascimento && f.dataNascimento > hoje())
+      return setErro("Data de nascimento não pode ser futura.");
+    if (!f.dataCadastro) return setErro("Data do cadastro é obrigatória.");
+    if (f.dataCadastro > hoje()) return setErro("Data do cadastro não pode ser futura.");
 
     setSalvando(true);
     try {
@@ -147,7 +160,7 @@ export function ClienteForm({ cliente, inline = false, onFechar, onSalvo, onSess
             type="button"
             aria-label="Fechar"
             onClick={onFechar}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-spark-body transition active:bg-spark-hover"
+            className="flex h-10 w-10 items-center justify-center rounded-sm text-spark-body transition active:bg-spark-hover"
           >
             <X size={20} />
           </button>
@@ -164,6 +177,16 @@ export function ClienteForm({ cliente, inline = false, onFechar, onSalvo, onSess
       >
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-spark-muted">Identificacao</p>
 
+        <label className="mb-3 block">
+          <span className={labelCls}>Data do cadastro *</span>
+          <input
+            type="date"
+            className={inputCls}
+            max={hoje()}
+            value={f.dataCadastro}
+            onChange={(e) => campo("dataCadastro", e.target.value)}
+          />
+        </label>
         <label className="mb-3 block">
           <span className={labelCls}>Nome completo *</span>
           <input className={inputCls} value={f.nome} onChange={(e) => campo("nome", e.target.value)} maxLength={160} />
@@ -262,11 +285,11 @@ export function ClienteForm({ cliente, inline = false, onFechar, onSalvo, onSess
           <input className={inputCls} value={f.naturalidade} onChange={(e) => campo("naturalidade", e.target.value)} maxLength={120} />
         </label>
 
-        <p className="mb-3 mt-5 text-xs font-semibold uppercase tracking-wide text-spark-muted">Endereco</p>
+        <p className="mb-3 mt-5 text-xs font-semibold uppercase tracking-wide text-spark-muted">Endereço</p>
 
         <div className="mb-3 grid grid-cols-2 gap-3">
           <label className="block">
-            <span className={labelCls}>Tipo de endereco</span>
+            <span className={labelCls}>Tipo de endereço</span>
             <select className={inputCls} value={f.tipoEndereco} onChange={(e) => campo("tipoEndereco", e.target.value)}>
               {TIPOS_ENDERECO.map((s) => (
                 <option key={s} value={s}>{s}</option>
@@ -280,7 +303,7 @@ export function ClienteForm({ cliente, inline = false, onFechar, onSalvo, onSess
         </div>
 
         <label className="mb-3 block">
-          <span className={labelCls}>Endereco</span>
+          <span className={labelCls}>Endereço</span>
           <input className={inputCls} value={f.endereco} onChange={(e) => campo("endereco", e.target.value)} maxLength={240} />
         </label>
         <label className="mb-3 block">
@@ -299,7 +322,7 @@ export function ClienteForm({ cliente, inline = false, onFechar, onSalvo, onSess
           </select>
         </label>
         <label className="mb-4 block">
-          <span className={labelCls}>Observacoes</span>
+          <span className={labelCls}>Observações</span>
           <textarea
             className={`${inputCls} h-24 resize-none py-2.5`}
             value={f.observacoes}
@@ -316,10 +339,10 @@ export function ClienteForm({ cliente, inline = false, onFechar, onSalvo, onSess
         <button
           type="submit"
           disabled={salvando}
-          className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E87916] to-spark-accent text-base font-semibold text-white shadow-[0_10px_24px_-10px_rgba(224,103,10,0.7)] transition active:scale-[0.98] disabled:opacity-60"
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-spark-accent hover:bg-spark-accent-strong text-base font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
         >
           {salvando && <CircleNotch size={20} className="animate-spin" />}
-          {salvando ? "Salvando..." : editando ? "Salvar alteracoes" : "Salvar cliente"}
+          {salvando ? "Salvando..." : editando ? "Salvar alterações" : "Salvar cliente"}
         </button>
       </form>
     </div>

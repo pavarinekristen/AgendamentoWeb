@@ -73,9 +73,9 @@ export function NotificationBell({ itens }: { itens: Notificacao[] }) {
       <button
         type="button"
         onClick={abrir}
-        aria-label={`Notificacoes${naoLidas > 0 ? ` (${naoLidas} nao lidas)` : ""}`}
+        aria-label={`Notificações${naoLidas > 0 ? ` (${naoLidas} nao lidas)` : ""}`}
         aria-expanded={aberto}
-        className={`relative flex h-10 w-10 items-center justify-center rounded-full text-spark-body transition hover:bg-spark-hover active:scale-95 ${
+        className={`relative flex h-10 w-10 items-center justify-center rounded-sm text-spark-body transition hover:bg-spark-hover active:scale-95 ${
           aberto ? "bg-spark-hover" : ""
         }`}
       >
@@ -93,12 +93,12 @@ export function NotificationBell({ itens }: { itens: Notificacao[] }) {
           <div className="fixed inset-0 z-40 bg-black/5 lg:hidden" aria-hidden="true" />
           <div
             role="dialog"
-            aria-label="Notificacoes"
+            aria-label="Notificações"
             className="absolute right-0 top-full z-50 mt-2 w-[min(20rem,calc(100vw-1.5rem))] origin-top-right overflow-hidden rounded-2xl border border-spark-line bg-spark-panel shadow-[0_24px_48px_-16px_rgba(28,25,23,0.35)]"
             style={{ animation: "tab-in 0.16s ease both" }}
           >
             <div className="flex items-center justify-between border-b border-spark-line px-4 py-3">
-              <p className="font-display text-[15px] font-bold text-spark-ink">Notificacoes</p>
+              <p className="font-display text-[15px] font-bold text-spark-ink">Notificações</p>
               <span className="text-[12px] font-medium text-spark-muted">
                 {itens.length === 0 ? "nenhuma" : `${itens.length} evento(s)`}
               </span>
@@ -106,7 +106,7 @@ export function NotificationBell({ itens }: { itens: Notificacao[] }) {
 
             {itens.length === 0 ? (
               <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-spark-surface">
+                <div className="flex h-12 w-12 items-center justify-center rounded-sm bg-spark-surface">
                   <Check size={22} className="text-spark-success" />
                 </div>
                 <p className="text-[13px] font-medium text-spark-text">Tudo em dia!</p>
@@ -128,7 +128,7 @@ export function NotificationBell({ itens }: { itens: Notificacao[] }) {
                         className="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-spark-hover"
                       >
                         <span
-                          className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                          className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-sm ${
                             critico ? "bg-spark-danger/10 text-spark-danger" : "bg-spark-soft text-spark-accent-strong"
                           }`}
                         >
@@ -142,7 +142,7 @@ export function NotificationBell({ itens }: { itens: Notificacao[] }) {
                             {n.descricao}
                           </span>
                           {n.quando && (
-                            <span className="mt-1 inline-block rounded-full bg-spark-surface px-2 py-0.5 text-[11px] font-medium text-spark-muted">
+                            <span className="mt-1 inline-block rounded-sm bg-spark-surface px-2 py-0.5 text-[11px] font-medium text-spark-muted">
                               {n.quando}
                             </span>
                           )}

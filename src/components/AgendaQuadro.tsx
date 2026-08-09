@@ -116,7 +116,7 @@ export function AgendaQuadro({
           setDragId(null);
           setOverCol(null);
         }}
-        className={`group relative rounded-xl border bg-spark-panel p-2.5 shadow-[0_6px_16px_-12px_rgba(28,25,23,0.4)] transition ${
+        className={`group relative rounded-xl border bg-spark-panel p-2.5 transition ${
           c.ehTarefa ? "border-spark-soft ring-1 ring-spark-accent/15" : "border-spark-line"
         } ${salvando ? "opacity-50" : ""} ${
           dragId === c.idLocal ? "opacity-40" : ""
@@ -152,7 +152,7 @@ export function AgendaQuadro({
               type="button"
               aria-label={`Buscar ${c.clienteNome}`}
               onClick={() => onBuscarCliente(c.clienteNome)}
-              className="flex h-7 w-7 items-center justify-center rounded-full text-spark-muted transition hover:bg-spark-hover hover:text-spark-body"
+              className="flex h-7 w-7 items-center justify-center rounded-sm text-spark-muted transition hover:bg-spark-hover hover:text-spark-body"
             >
               <MagnifyingGlass size={14} />
             </button>
@@ -161,7 +161,7 @@ export function AgendaQuadro({
             type="button"
             aria-label="Editar consulta"
             onClick={() => onEditar(c)}
-            className="flex h-7 w-7 items-center justify-center rounded-full text-spark-muted transition hover:bg-spark-hover hover:text-spark-body"
+            className="flex h-7 w-7 items-center justify-center rounded-sm text-spark-muted transition hover:bg-spark-hover hover:text-spark-body"
           >
             <PencilSimple size={14} />
           </button>
@@ -170,7 +170,7 @@ export function AgendaQuadro({
             type="button"
             aria-label="Mover consulta"
             onClick={() => setMenuId((v) => (v === c.idLocal ? null : c.idLocal))}
-            className="flex h-7 items-center gap-1 rounded-full bg-spark-soft px-2 text-[11px] font-semibold text-spark-accent-strong transition active:scale-95 lg:hidden"
+            className="flex h-7 items-center gap-1 rounded-sm bg-spark-soft px-2 text-[11px] font-semibold text-spark-accent-strong transition active:scale-95 lg:hidden"
           >
             Mover <ArrowRight size={12} weight="bold" />
           </button>
@@ -227,7 +227,7 @@ export function AgendaQuadro({
           <button
             type="button"
             onClick={onNovaTarefa}
-            className="flex items-center gap-1 rounded-full border border-spark-inputline bg-spark-panel px-3 py-2 text-[13px] font-semibold text-spark-body transition hover:bg-spark-hover active:scale-95"
+            className="flex items-center gap-1 rounded-sm border border-spark-inputline bg-spark-panel px-3 py-2 text-[13px] font-semibold text-spark-body transition hover:bg-spark-hover active:scale-95"
           >
             <PushPin size={14} weight="bold" />
             Tarefa
@@ -235,7 +235,7 @@ export function AgendaQuadro({
           <button
             type="button"
             onClick={() => onAgendar(dia)}
-            className="flex items-center gap-1 rounded-full bg-gradient-to-br from-[#E87916] to-spark-accent px-3.5 py-2 text-[13px] font-semibold text-white shadow-[0_8px_18px_-8px_rgba(224,103,10,0.8)] transition active:scale-95"
+            className="flex items-center gap-1 rounded-sm bg-spark-accent hover:bg-spark-accent-strong px-3.5 py-2 text-[13px] font-semibold text-white transition active:scale-95"
           >
             <Plus size={15} weight="bold" />
             Agendar
