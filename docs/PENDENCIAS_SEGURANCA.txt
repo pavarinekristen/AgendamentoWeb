@@ -97,10 +97,16 @@ Prioridade menor apos o CSP estar ativo.
 ------------------------------------------------------------------------
 [ ] M3 (MEDIA) - "Acesso exclusivo da diretoria" e so no cliente
 ------------------------------------------------------------------------
-Problema: VITE_ALLOWED_EMAILS roda no navegador (cosmetico). Qualquer conta
+Problema: VITE_ALLOWED_EMAILS rodava no navegador (cosmetico). Qualquer conta
 valida e confirmada chama a API direto e ve os dados da propria empresa.
 Nao vaza dados de OUTRA empresa (isolamento por empresa esta correto), mas
 a "exclusividade" nao existe no servidor.
+
+08/08/2026: a allowlist do front foi REMOVIDA. Alem de cosmetica, ela ficava
+compilada no bundle e barrava a conta clinica.ideia@gmail.com em aparelhos com
+build antigo em cache ("Este acesso e exclusivo da diretoria"). Agora quem
+autoriza e a API. Se exclusividade voltar a ser requisito, implementar no
+servidor (abaixo) — nunca no front.
 
 Como corrigir (se exclusividade for requisito real): validar no servidor,
 ex. exigir PERFIL='Administrador' nos controllers do portal, ou allowlist

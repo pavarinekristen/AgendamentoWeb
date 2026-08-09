@@ -55,7 +55,7 @@
 [ ] M1 (pentest): migrar token do localStorage para cookie HttpOnly
     (mitigado pelo CSP ja publicado; prioridade baixa).
 [ ] M3 (pentest): validar "acesso exclusivo da diretoria" no SERVIDOR
-    (hoje VITE_ALLOWED_EMAILS e so cosmetico no front) — ex.: exigir
+    (VITE_ALLOWED_EMAILS removida em 08/08/2026; hoje nao ha trava) — ex.: exigir
     PERFIL='Administrador' nos controllers do portal.
 [ ] Edicao de cliente pelo app (PUT /portal/clientes/{idLocal} ja existe
     na API; falta tela de edicao no app — hoje so tem criacao).

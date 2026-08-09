@@ -27,16 +27,16 @@ endereço "Network" que o Vite imprime no terminal (ex.: `http://192.168.x.x:500
 Obs.: o Ctrl+K do desktop busca no SQLite local sincronizado; o equivalente
 servidor é a rota `portal/clientes`, que consulta os mesmos dados no Postgres.
 
-## Trava de acesso da diretoria
+## Quem pode entrar
 
-Edite `.env` e preencha:
+Quem autoriza é a API: entra qualquer conta ativa e confirmada em `RET_USUARIO`
+(hoje `kristenpp2003@gmail.com`, com 2FA por e-mail, e `clinica.ideia@gmail.com`).
 
-```
-VITE_ALLOWED_EMAILS=email-da-dona@exemplo.com
-```
-
-Só esses e-mails passam da tela de login (a trava é reforçada com o e-mail que a
-própria API retorna no login). Vazio = qualquer conta válida entra.
+A antiga `VITE_ALLOWED_EMAILS` foi removida: a lista era compilada dentro do
+bundle, então celular/PC com versão antiga em cache continuava mostrando
+"Este acesso é exclusivo da diretoria" para uma conta já liberada. Para
+restringir de verdade, a validação tem que ser no servidor (M3 em
+`docs/PENDENCIAS_SEGURANCA.txt`).
 
 ## Publicar em produção (opcional, futuro)
 
